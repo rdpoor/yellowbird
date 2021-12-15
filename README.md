@@ -1,6 +1,6 @@
 # yellowbird
 
-## Potentially useful links
+## Useful links
 
 * [ATSAME54 Data Sheet (Cortex-M4F)](http://ww1.microchip.com/downloads/en/DeviceDoc/SAM_D5xE5x_Family_Data_Sheet_DS60001507F.pdf)
 * [ATSAME54 Errata](http://ww1.microchip.com/downloads/en/DeviceDoc/SAM-D5x-E5x-Family-Silicon-Errata-DS80000748K.pdf)
