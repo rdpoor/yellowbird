@@ -23,7 +23,8 @@
 
 #define SDCARD_MOUNT_NAME "/mnt/mydrive"
 #define SDCARD_DEV_NAME "/dev/mmcblka1"
-#define FILE_IMAGE_NAME "winc.img"
+// #define FILE_IMAGE_NAME "winc.img"
+#define FILE_IMAGE_NAME "/mnt/winc.img"
 
 #define SECTOR_TO_OFFSET(_sector) ((_sector)*FLASH_SECTOR_SZ)
 #define WINC_SECTOR_COUNT 128 // TODO: look up dynamically
@@ -33,7 +34,6 @@
   DEFINE_STATE(STATE_INIT)                                                     \
   DEFINE_STATE(STATE_INITIALIZING_WINC)                                        \
   DEFINE_STATE(STATE_MOUNTING_FILESYSTEM)                                      \
-  DEFINE_STATE(STATE_SELECTING_DRIVE)                                          \
   DEFINE_STATE(STATE_CHECKING_FILE_INFO)                                       \
   DEFINE_STATE(STATE_OPENING_IMAGE_FILE)                                       \
   DEFINE_STATE(STATE_COMPARING_SECTORS)                                        \
@@ -123,26 +123,27 @@ void APP_Tasks(void) {
   case STATE_MOUNTING_FILESYSTEM: {
     if (SYS_FS_Mount(SDCARD_DEV_NAME, SDCARD_MOUNT_NAME, FAT, 0, NULL) != 0) {
       SYS_DEBUG_MESSAGE(SYS_ERROR_INFO, "\nMounted SD card FAT filesystem");
-      set_state(STATE_SELECTING_DRIVE);
+      // set_state(STATE_SELECTING_DRIVE);
+      set_state(STATE_CHECKING_FILE_INFO);
     } else {
       SYS_DEBUG_MESSAGE(SYS_ERROR_ERROR, "\nUnable to mount filesystem");
       set_state(STATE_ERROR);
     }
   } break;
 
-  case STATE_SELECTING_DRIVE: {
-    // Setting the current drive means we don't have to use the absoute path
-    // for filenames.
-   if (SYS_FS_CurrentDriveSet(SDCARD_MOUNT_NAME) != SYS_FS_RES_FAILURE) {
-     SYS_DEBUG_MESSAGE(SYS_ERROR_INFO, "\nSelected mounted drive");
-     set_state(STATE_CHECKING_FILE_INFO);
-   } else {
-     SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
-                     "\nUnable to select drive, error %d",
-                     SYS_FS_Error());
-     set_state(STATE_ERROR);
-   }
-  } break;
+  // case STATE_SELECTING_DRIVE: {
+  //   // Setting the current drive means we don't have to use the absoute path
+  //   // for filenames.
+  //  if (SYS_FS_CurrentDriveSet(SDCARD_MOUNT_NAME) != SYS_FS_RES_FAILURE) {
+  //    SYS_DEBUG_MESSAGE(SYS_ERROR_INFO, "\nSelected mounted drive");
+  //    set_state(STATE_CHECKING_FILE_INFO);
+  //  } else {
+  //    SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
+  //                    "\nUnable to select drive, error %d",
+  //                    SYS_FS_Error());
+  //    set_state(STATE_ERROR);
+  //  }
+  // } break;
 
   case STATE_CHECKING_FILE_INFO: {
     // Checking to see winc.img file exists and is the correct size
