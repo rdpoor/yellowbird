@@ -17,3 +17,7 @@
 **/*.KEIL/Objects
 **/*.KEIL/*.uvguix.*
 Gemfile*
+/MPLAB/winc_imager/firmware/winc_imager.X/build/
+/MPLAB/winc_imager/firmware/winc_imager.X/dist/
+/MPLAB/sdspi_fat_v03/firmware/sam_e54_xpro_freertos.X/build/
+/MPLAB/sdspi_fat_v03/firmware/sam_e54_xpro_freertos.X/dist/
