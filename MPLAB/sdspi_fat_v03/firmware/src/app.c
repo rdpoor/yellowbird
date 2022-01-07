@@ -20,7 +20,7 @@
 // *****************************************************************************
 // Private types and definitions
 
-#define WINC_IMAGER_VERSION "0.3.0"
+#define WINC_IMAGER_VERSION "0.3.1"
 #define MOUNT_NAME "/mnt/mydrive"
 #define DEV_NAME "/dev/mmcblka1"
 #define FILE_NAME "FILE_TOO_LONG_NAME_EXAMPLE_123.JPG"
@@ -34,6 +34,9 @@
 
 #define DEFINE_STATES                                                          \
   DEFINE_STATE(STATE_INIT)                                                     \
+  DEFINE_STATE(STATE_INIT1)                                                    \
+  DEFINE_STATE(STATE_INIT2)                                                    \
+  DEFINE_STATE(STATE_INIT3)                                                    \
   DEFINE_STATE(STATE_INITIALIZING_WINC)                                        \
   DEFINE_STATE(STATE_MOUNTING_FILESYSTEM)                                      \
   DEFINE_STATE(STATE_SET_CURRENT_DRIVE)                                        \
@@ -93,14 +96,29 @@ void APP_Tasks(void) {
 
   case STATE_INIT: {
     // Arrive here on startup.  Print an introductory message...
+    SYS_CONSOLE_PRINT("\n======== WINC imaging tool, version %s ========",
+                      WINC_IMAGER_VERSION);
+    set_state(STATE_INIT1);
+  } break;
+
+  case STATE_INIT1: {
+    // Arrive here on startup.  Print an introductory message...
     SYS_CONSOLE_PRINT(
-        "\n========== WINC imaging tool, version %s =========="
-        "\nRead and write raw WINC image from and to a file on the SD card."
-        "\nRequires:"
-        "\n  SAME54 Xplained Pro Development board"
-        "\n  WINC1500 Xplained Pro Expansion board (in EXT-1)"
-        "\n  IO/1 Xplained Pro Expansion board (in EXT-2)",
-        WINC_IMAGER_VERSION);
+        "\nRead and write raw WINC image from and to a file on the SD card.");
+    set_state(STATE_INIT2);
+  } break;
+
+  case STATE_INIT2: {
+    // Arrive here on startup.  Print an introductory message...
+    SYS_CONSOLE_PRINT("\nRequires:"
+                      "\n  SAME54 Xplained Pro Development board");
+    set_state(STATE_INIT3);
+  } break;
+
+  case STATE_INIT3: {
+    // Arrive here on startup.  Print an introductory message...
+    SYS_CONSOLE_PRINT("\n  WINC1500 Xplained Pro Expansion board (in EXT-1)"
+                      "\n  IO/1 Xplained Pro Expansion board (in EXT-2)");
     set_state(STATE_INITIALIZING_WINC);
   } break;
 
@@ -190,10 +208,11 @@ void APP_Tasks(void) {
       set_state(STATE_READ_WRITE_TO_FILE);
     }
     break;
+
   case STATE_READ_WRITE_TO_FILE:
 
-    s_app_ctx.nBytesRead = SYS_FS_FileRead(s_app_ctx.srcFileHandle,
-                                           (void *)s_xfer_buffer, APP_DATA_LEN);
+    s_app_ctx.nBytesRead = SYS_FS_FileRead(
+        s_app_ctx.srcFileHandle, (void *)s_xfer_buffer, APP_DATA_LEN);
 
     if (s_app_ctx.nBytesRead == -1) {
       /* There was an error while reading the file.
@@ -203,7 +222,8 @@ void APP_Tasks(void) {
       set_state(STATE_ERROR);
     } else {
       /* If read was success, try writing to the new file */
-      if (SYS_FS_FileWrite(s_app_ctx.dstFileHandle, (const void *)s_xfer_buffer,
+      if (SYS_FS_FileWrite(s_app_ctx.dstFileHandle,
+                           (const void *)s_xfer_buffer,
                            s_app_ctx.nBytesRead) == -1) {
         /* Write was not successful. Close the file
          * and error out.*/
@@ -253,7 +273,9 @@ void APP_Tasks(void) {
 // Private (static) code
 
 static void set_state(app_state_t new_state) {
-  SYS_DEBUG_PRINT(SYS_ERROR_DEBUG, "\n%s => %s", state_name(s_app_ctx.state),
+  SYS_DEBUG_PRINT(SYS_ERROR_DEBUG,
+                  "\n%s => %s",
+                  state_name(s_app_ctx.state),
                   state_name(new_state));
   s_app_ctx.state = new_state;
 }

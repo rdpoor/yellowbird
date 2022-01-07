@@ -343,6 +343,33 @@
         <itemPath>../src/config/sam_e54_xpro/sam_e54_xpro.mhc/sys_time.yml</itemPath>
         <itemPath>../src/config/sam_e54_xpro/sam_e54_xpro.mhc/tc3.yml</itemPath>
       </logicalFolder>
+      <logicalFolder name="f2"
+                     displayName="sam_e54_xpro_freertos.mhc"
+                     projectFiles="true">
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/BSP_SAM_E54_Xplained_Pro.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/cmsis.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/core.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/dfp.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/drvWifiWinc.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/drv_sdspi.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/drv_spi.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/eic.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/evsys.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/FreeRTOS.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/GraphSettings.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/HarmonyCore.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/nvmctrl.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/project.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/sercom2.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/sercom4.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/sercom6.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/settings.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/sys_console.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/sys_debug.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/sys_fs.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/sys_time.yml</itemPath>
+        <itemPath>../../../sdspi_fat_v02/firmware/src/config/sam_e54_xpro_freertos/sam_e54_xpro_freertos.mhc/tc0.yml</itemPath>
+      </logicalFolder>
       <itemPath>../src/config/sam_e54_xpro/harmony-manifest-success.yml</itemPath>
       <itemPath>sys_console_debug_uart_read_write_sam_e54_xpro.mc3</itemPath>
     </logicalFolder>
@@ -756,7 +783,7 @@
         <property key="memories.rww" value="true"/>
         <property key="poweroptions.powerenable" value="false"/>
         <property key="programmerToGoFilePath"
-                  value="C:/Users/r/Projects/Klatu/git/yellowbird/MPLAB/winc_imager/firmware/winc_imager.X/debug/sam_e54_xpro/winc_imager_ptg"/>
+                  value="D:/harmony/core_apps_sam_d5x_e5x/apps/system/console_debug/sys_console_debug_uart_read_write/firmware/sam_e54_xpro.X/debug/sam_e54_xpro/sam_e54_xpro_ptg"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"

@@ -19,12 +19,12 @@
 // *****************************************************************************
 // Private types and definitions
 
-#define WINC_IMAGER_VERSION "1.0.0"
+#define WINC_IMAGER_VERSION "0.0.1"
 
 #define SDCARD_MOUNT_NAME "/mnt/mydrive"
 #define SDCARD_DEV_NAME "/dev/mmcblka1"
-// #define FILE_IMAGE_NAME "winc.img"
-#define FILE_IMAGE_NAME "/mnt/winc.img"
+#define FILE_IMAGE_NAME "winc.img"
+#define MAX_MOUNT_RETRIES 255
 
 #define SECTOR_TO_OFFSET(_sector) ((_sector)*FLASH_SECTOR_SZ)
 #define WINC_SECTOR_COUNT 128 // TODO: look up dynamically
@@ -65,6 +65,7 @@ typedef struct {
   DRV_HANDLE winc_handle;
   uint8_t sector;
   bool has_winc_write_permission;
+  uint8_t mount_retries;
 } app_ctx_t;
 
 // *****************************************************************************
@@ -77,8 +78,8 @@ static const char *state_name(app_state_t state);
 // Private (static) storage
 
 static app_ctx_t s_app_ctx;
-static uint8_t s_file_buffer[FLASH_SECTOR_SZ];
-static uint8_t s_winc_buffer[FLASH_SECTOR_SZ];
+static uint8_t CACHE_ALIGN s_file_buffer[FLASH_SECTOR_SZ];
+static uint8_t CACHE_ALIGN s_winc_buffer[FLASH_SECTOR_SZ];
 
 #undef DEFINE_STATE
 #define DEFINE_STATE(_name) #_name,
@@ -114,6 +115,7 @@ void APP_Tasks(void) {
     s_app_ctx.winc_handle = WDRV_WINC_Open(0, DRV_IO_INTENT_EXCLUSIVE);
     if (s_app_ctx.winc_handle != DRV_HANDLE_INVALID) {
       SYS_DEBUG_MESSAGE(SYS_ERROR_INFO, "\nOpened WINC1500");
+      s_app_ctx.mount_retries = MAX_MOUNT_RETRIES;
       set_state(STATE_MOUNTING_FILESYSTEM);
     } else {
       SYS_DEBUG_MESSAGE(SYS_ERROR_ERROR, "\nUnable to open WINC1500");
@@ -122,27 +124,33 @@ void APP_Tasks(void) {
   } break;
 
   case STATE_MOUNTING_FILESYSTEM: {
-    if (SYS_FS_Mount(SDCARD_DEV_NAME, SDCARD_MOUNT_NAME, FAT, 0, NULL) != 0) {
-      SYS_DEBUG_MESSAGE(SYS_ERROR_INFO, "\nMounted SD card FAT filesystem");
-      set_state(STATE_SET_CURRENT_DRIVE);
-    } else {
-      SYS_DEBUG_MESSAGE(SYS_ERROR_ERROR, "\nUnable to mount filesystem");
+    if (s_app_ctx.mount_retries == 0) {
+      // failed to mount disk after MAX_MOUNT_RETRIES attempts
+      SYS_CONSOLE_PRINT("\nfailed to mount SD card after %d attempts",
+                        MAX_MOUNT_RETRIES);
       set_state(STATE_ERROR);
+    } else if (SYS_FS_Mount(SDCARD_DEV_NAME, SDCARD_MOUNT_NAME, FAT, 0, NULL) != 0) {
+      /* The disk was not mounted -- try again until success. */
+      s_app_ctx.mount_retries -= 1;
+      // Stay in this state...
+      // set_state(STATE_MOUNTING_FILESYSTEM);
+    } else {
+      SYS_CONSOLE_PRINT("\nsetting current drive");
+      set_state(STATE_SET_CURRENT_DRIVE);
     }
   } break;
 
   case STATE_SET_CURRENT_DRIVE: {
-    // Setting the current drive means we don't have to use the absoute path
-    // for filenames.
-   if (SYS_FS_CurrentDriveSet(SDCARD_MOUNT_NAME) == SYS_FS_RES_FAILURE) {
-       SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
-                       "\nUnable to select drive, error %d",
-                       SYS_FS_Error());
-       set_state(STATE_ERROR);
-   } else {
-     SYS_DEBUG_MESSAGE(SYS_ERROR_INFO, "\nSelected mounted drive");
-     set_state(STATE_CHECKING_FILE_INFO);
-   }
+    // Set current drive so that we do not have to use absolute path.
+    if (SYS_FS_CurrentDriveSet(SDCARD_MOUNT_NAME) == SYS_FS_RES_FAILURE) {
+      SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
+                      "\nUnable to select drive, error %d",
+                      SYS_FS_Error());
+      set_state(STATE_ERROR);
+    } else {
+      SYS_DEBUG_MESSAGE(SYS_ERROR_INFO, "\nSelected mounted drive");
+      set_state(STATE_CHECKING_FILE_INFO);
+    }
   } break;
 
   case STATE_CHECKING_FILE_INFO: {
@@ -426,8 +434,10 @@ void APP_Tasks(void) {
 // Private (static) code
 
 static void set_state(app_state_t new_state) {
-  SYS_DEBUG_PRINT(
-      SYS_ERROR_DEBUG, "\n%s => %s", state_name(s_app_ctx.state), state_name(new_state));
+  SYS_DEBUG_PRINT(SYS_ERROR_DEBUG,
+                  "\n%s => %s",
+                  state_name(s_app_ctx.state),
+                  state_name(new_state));
   s_app_ctx.state = new_state;
 }
 

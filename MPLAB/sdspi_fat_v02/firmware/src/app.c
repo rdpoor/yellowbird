@@ -155,6 +155,7 @@ void APP_Tasks ( void )
             if (SWITCH_GET() == SWITCH_STATUS_PRESSED)
             {
                 SYS_CONSOLE_PRINT("\nmounting disk");
+                appData.openAttempts = 0;
                 appData.state = APP_MOUNT_DISK;
             }
             break;
@@ -163,12 +164,15 @@ void APP_Tasks ( void )
             {
                 /* The disk could not be mounted. Try
                  * mounting again until success. */
+                appData.openAttempts += 1;
                 appData.state = APP_MOUNT_DISK;
             }
             else
             {
                 /* Mount was successful. Unmount the disk, for testing. */
-                SYS_CONSOLE_PRINT("\nunmounting disk");
+                SYS_CONSOLE_PRINT("\nMounted after %ld attempts, unmounting...",
+                                  appData.openAttempts);
+                appData.openAttempts = 0;
                 appData.state = APP_UNMOUNT_DISK;
             }
             break;
@@ -178,13 +182,15 @@ void APP_Tasks ( void )
             {
                 /* The disk could not be un mounted. Try
                  * un mounting again untill success. */
-
+                appData.openAttempts += 1;
                 appData.state = APP_UNMOUNT_DISK;
             }
             else
             {
                 /* UnMount was successful. Mount the disk again */
-                SYS_CONSOLE_PRINT("\nmounting disk again");
+                SYS_CONSOLE_PRINT("\nUnmounted after %ld attemps, remount...",
+                                  appData.openAttempts);
+                appData.openAttempts = 0;
                 appData.state = APP_MOUNT_DISK_AGAIN;
             }
             break;
@@ -194,12 +200,14 @@ void APP_Tasks ( void )
             {
                 /* The disk could not be mounted. Try
                  * mounting again until success. */
+                appData.openAttempts += 1;
                 appData.state = APP_MOUNT_DISK_AGAIN;
             }
             else
             {
                 /* Mount was successful. Set current drive so that we do not have to use absolute path. */
-                SYS_CONSOLE_PRINT("\nsetting current drive");
+                SYS_CONSOLE_PRINT("\nRemount after %ld attemps. "
+                                  "setting current drive", appData.openAttempts);
                 appData.state = APP_SET_CURRENT_DRIVE;
             }
             break;

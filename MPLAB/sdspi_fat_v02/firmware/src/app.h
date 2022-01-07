@@ -153,6 +153,9 @@ typedef struct
     APP_STATES                  state;
 
     int32_t                     nBytesRead;
+
+    /* # of times open was called. */
+    uint32_t                    openAttempts;
 } APP_DATA;
 
 
