@@ -54,11 +54,6 @@
 #include "wdrv_winc_common.h"
 #include "wdrv_winc_authctx.h"
 
-#define WDRV_WINC_AssociationSSIDGet        WDRV_WINC_AssocSSIDGet
-#define WDRV_WINC_AssociationPeerAddressGet WDRV_WINC_AssocPeerAddressGet
-#define WDRV_WINC_AssociationAuthTypeGet    WDRV_WINC_AssocAuthTypeGet
-#define WDRV_WINC_AssociationRSSIGet        WDRV_WINC_AssocRSSIGet
-
 // *****************************************************************************
 // *****************************************************************************
 // Section: WINC Driver Association Data Types
@@ -85,7 +80,7 @@ typedef struct
     uint32_t ipAddress;
 
     /* Ethernet address. */
-    WDRV_WINC_MAC_ADDR macAddress;
+    uint8_t  macAddress[6];
 } WDRV_WINC_NETWORK_ADDRESS;
 
 // *****************************************************************************
@@ -110,14 +105,13 @@ typedef struct
     None.
 
   Remarks:
-    See WDRV_WINC_AssocSSIDGet, WDRV_WINC_AssocPeerAddressGet and
-    WDRV_WINC_AssocAuthTypeGet.
+    See WDRV_WINC_AssociationSSIDGet, WDRV_WINC_AssociationPeerAddressGet and
+    WDRV_WINC_AssociationAuthTypeGet.
 */
 
 typedef void (*WDRV_WINC_ASSOC_CALLBACK)
 (
     DRV_HANDLE handle,
-    WDRV_WINC_ASSOC_HANDLE assocHandle,
     const WDRV_WINC_SSID *const pSSID,
     const WDRV_WINC_NETWORK_ADDRESS *const pPeerAddress,
     WDRV_WINC_AUTH_TYPE authType,
@@ -156,7 +150,7 @@ typedef void (*WDRV_WINC_ASSOC_RSSI_CALLBACK)(DRV_HANDLE handle, int8_t rssi);
 //*******************************************************************************
 /*
   Function:
-    WDRV_WINC_STATUS WDRV_WINC_AssocSSIDGet
+    WDRV_WINC_STATUS WDRV_WINC_AssociationSSIDGet
     (
         DRV_HANDLE handle,
         WDRV_WINC_SSID *const pSSID,
@@ -175,7 +169,7 @@ typedef void (*WDRV_WINC_ASSOC_RSSI_CALLBACK)(DRV_HANDLE handle, int8_t rssi);
     A peer device needs to be connected and associated.
 
   Parameters:
-    assocHandle         - Association handle.
+    handle              - Client handle obtained by a call to WDRV_WINC_Open.
     pSSID               - Pointer to buffer to receive the SSID if available.
     pfAssociationInfoCB - Pointer to callback function to be used when SSID
                             is available.
@@ -200,9 +194,9 @@ typedef void (*WDRV_WINC_ASSOC_RSSI_CALLBACK)(DRV_HANDLE handle, int8_t rssi);
 
 */
 
-WDRV_WINC_STATUS WDRV_WINC_AssocSSIDGet
+WDRV_WINC_STATUS WDRV_WINC_AssociationSSIDGet
 (
-    WDRV_WINC_ASSOC_HANDLE assocHandle,
+    DRV_HANDLE handle,
     WDRV_WINC_SSID *const pSSID,
     WDRV_WINC_ASSOC_CALLBACK const pfAssociationInfoCB
 );
@@ -210,7 +204,7 @@ WDRV_WINC_STATUS WDRV_WINC_AssocSSIDGet
 //*******************************************************************************
 /*
   Function:
-    WDRV_WINC_STATUS WDRV_WINC_AssocPeerAddressGet
+    WDRV_WINC_STATUS WDRV_WINC_AssociationPeerAddressGet
     (
         DRV_HANDLE handle,
         WDRV_WINC_NETWORK_ADDRESS *const pPeerAddress,
@@ -230,7 +224,7 @@ WDRV_WINC_STATUS WDRV_WINC_AssocSSIDGet
     A peer device needs to be connected and associated.
 
   Parameters:
-    assocHandle         - Association handle.
+    handle              - Client handle obtained by a call to WDRV_WINC_Open.
     pPeerAddress        - Pointer to structure to receive the network address
                             if available.
     pfAssociationInfoCB - Pointer to callback function to be used when network
@@ -256,9 +250,9 @@ WDRV_WINC_STATUS WDRV_WINC_AssocSSIDGet
 
 */
 
-WDRV_WINC_STATUS WDRV_WINC_AssocPeerAddressGet
+WDRV_WINC_STATUS WDRV_WINC_AssociationPeerAddressGet
 (
-    WDRV_WINC_ASSOC_HANDLE assocHandle,
+    DRV_HANDLE handle,
     WDRV_WINC_NETWORK_ADDRESS *const pPeerAddress,
     WDRV_WINC_ASSOC_CALLBACK const pfAssociationInfoCB
 );
@@ -266,7 +260,7 @@ WDRV_WINC_STATUS WDRV_WINC_AssocPeerAddressGet
 //*******************************************************************************
 /*
   Function:
-    WDRV_WINC_STATUS WDRV_WINC_AssocAuthTypeGet
+    WDRV_WINC_STATUS WDRV_WINC_AssociationAuthTypeGet
     (
         DRV_HANDLE handle,
         WDRV_WINC_AUTH_TYPE *const pAuthType,
@@ -285,7 +279,7 @@ WDRV_WINC_STATUS WDRV_WINC_AssocPeerAddressGet
     A peer device needs to be connected and associated.
 
   Parameters:
-    assocHandle         - Association handle.
+    handle              - Client handle obtained by a call to WDRV_WINC_Open.
     pAuthType           - Pointer to element to receive the authentication type
                             if available.
     pfAssociationInfoCB - Pointer to callback function to be used when
@@ -312,9 +306,9 @@ WDRV_WINC_STATUS WDRV_WINC_AssocPeerAddressGet
 
 */
 
-WDRV_WINC_STATUS WDRV_WINC_AssocAuthTypeGet
+WDRV_WINC_STATUS WDRV_WINC_AssociationAuthTypeGet
 (
-    WDRV_WINC_ASSOC_HANDLE assocHandle,
+    DRV_HANDLE handle,
     WDRV_WINC_AUTH_TYPE *const pAuthType,
     WDRV_WINC_ASSOC_CALLBACK const pfAssociationInfoCB
 );
@@ -322,7 +316,7 @@ WDRV_WINC_STATUS WDRV_WINC_AssocAuthTypeGet
 //*******************************************************************************
 /*
   Function:
-    WDRV_WINC_STATUS WDRV_WINC_AssocRSSIGet
+    WDRV_WINC_STATUS WDRV_WINC_AssociationRSSIGet
     (
         DRV_HANDLE handle,
         int8_t *const pRSSI,
@@ -341,7 +335,7 @@ WDRV_WINC_STATUS WDRV_WINC_AssocAuthTypeGet
     A peer device needs to be connected and associated.
 
   Parameters:
-    assocHandle         - Association handle.
+    handle              - Client handle obtained by a call to WDRV_WINC_Open.
     pRSSI               - Pointer to variable to receive RSSI if available.
     pfAssociationRSSICB - Pointer to callback function to be used when
                             RSSI value is available.
@@ -366,9 +360,9 @@ WDRV_WINC_STATUS WDRV_WINC_AssocAuthTypeGet
 
 */
 
-WDRV_WINC_STATUS WDRV_WINC_AssocRSSIGet
+WDRV_WINC_STATUS WDRV_WINC_AssociationRSSIGet
 (
-    WDRV_WINC_ASSOC_HANDLE assocHandle,
+    DRV_HANDLE handle,
     int8_t *const pRSSI,
     WDRV_WINC_ASSOC_RSSI_CALLBACK const pfAssociationRSSICB
 );

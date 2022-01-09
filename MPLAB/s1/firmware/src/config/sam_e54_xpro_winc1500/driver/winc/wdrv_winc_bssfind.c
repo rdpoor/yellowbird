@@ -61,9 +61,8 @@
     WDRV_WINC_STATUS WDRV_WINC_BSSFindFirst
     (
         DRV_HANDLE handle,
-        WDRV_WINC_CHANNEL_ID channel,
+        uint8_t channel,
         bool active,
-        const WDRV_WINC_SSID_LIST *const pSSIDList,
         const WDRV_WINC_BSSFIND_NOTIFY_CALLBACK pfNotifyCallback
     )
 
@@ -82,9 +81,8 @@
 WDRV_WINC_STATUS WDRV_WINC_BSSFindFirst
 (
     DRV_HANDLE handle,
-    WDRV_WINC_CHANNEL_ID channel,
+    uint8_t channel,
     bool active,
-    const WDRV_WINC_SSID_LIST *const pSSIDList,
     const WDRV_WINC_BSSFIND_NOTIFY_CALLBACK pfNotifyCallback
 )
 {
@@ -93,23 +91,7 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindFirst
     int8_t result;
 
     /* Ensure the driver handle is valid. */
-    if ((DRV_HANDLE_INVALID == handle) || (NULL == pDcpt) || (NULL == pDcpt->pCtrl))
-    {
-        return WDRV_WINC_STATUS_INVALID_ARG;
-    }
-
-    /* Ensure request channel is valid. */
-    if ((channel > WDRV_WINC_CID_2_4G_CH14) && (WDRV_WINC_ALL_CHANNELS != channel))
-    {
-        return WDRV_WINC_STATUS_INVALID_ARG;
-    }
-
-#ifdef WDRV_WINC_DEVICE_SCAN_SSID_LIST
-    /* Ensure SSID list is only provided for active scans. */
-    if ((false == active) && (NULL != pSSIDList))
-#else
-    if (NULL != pSSIDList)
-#endif
+    if (NULL == pDcpt)
     {
         return WDRV_WINC_STATUS_INVALID_ARG;
     }
@@ -122,21 +104,21 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindFirst
 
     /* Convert public API representation of all channels to
        internal representation for the M2M driver. */
-    if ((WDRV_WINC_ALL_CHANNELS == channel) || (WDRV_WINC_CID_ANY == channel))
+    if (WDRV_WINC_ALL_CHANNELS == channel)
     {
         channel = M2M_WIFI_CH_ALL;
     }
 
     /* Check if the scan parameters have been updated from
        the defaults. */
-    if (false == pDcpt->pCtrl->scanParamDefault)
+    if (false == pDcpt->scanParamDefault)
     {
-        scanOptions.u8NumOfSlot         = pDcpt->pCtrl->scanNumSlots;
-        scanOptions.u8SlotTime          = pDcpt->pCtrl->scanActiveScanTime;
-        scanOptions.u8ProbesPerSlot     = pDcpt->pCtrl->scanNumProbes;
-        scanOptions.s8RssiThresh        = pDcpt->pCtrl->scanRSSIThreshold;
+        scanOptions.u8NumOfSlot         = pDcpt->scanNumSlots;
+        scanOptions.u8SlotTime          = pDcpt->scanActiveScanTime;
+        scanOptions.u8ProbesPerSlot     = pDcpt->scanNumProbes;
+        scanOptions.s8RssiThresh        = pDcpt->scanRSSIThreshold;
 #ifdef WDRV_WINC_DEVICE_WINC3400
-        scanOptions.u16PassiveScanTime  = pDcpt->pCtrl->scanPassiveScanTime;
+        scanOptions.u16PassiveScanTime  = pDcpt->scanPassiveScanTime;
 #endif
 
         /* Scan parameters need to be updated in the WINC device. */
@@ -148,51 +130,14 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindFirst
 
     if (true == active)
     {
-        if (NULL == pSSIDList)
-        {
-            /* Request active scan of selected channel (or all channels). */
-            result = m2m_wifi_request_scan(channel);
-        }
-        else
-        {
-#ifdef WDRV_WINC_DEVICE_SCAN_SSID_LIST
-            const WDRV_WINC_SSID_LIST *pSSIDListEle;
-
-            uint8_t ssidList[(MAX_HIDDEN_SITES * M2M_MAX_SSID_LEN) + 1];
-            uint8_t *pSSIDListArrIdx;
-
-            pSSIDListEle = pSSIDList;
-
-            ssidList[0] = 0;
-            pSSIDListArrIdx = &ssidList[1];
-
-            /* Construct packed SSID list. */
-            while ((NULL != pSSIDListEle) && (ssidList[0] < MAX_HIDDEN_SITES))
-            {
-                if (pSSIDListEle->ssid.length > (M2M_MAX_SSID_LEN-1))
-                {
-                    return WDRV_WINC_STATUS_INVALID_ARG;
-                }
-
-                *pSSIDListArrIdx++ = pSSIDListEle->ssid.length;
-                memcpy(pSSIDListArrIdx, pSSIDListEle->ssid.name, pSSIDListEle->ssid.length);
-                pSSIDListArrIdx += pSSIDListEle->ssid.length;
-
-                ssidList[0]++;
-
-                pSSIDListEle = pSSIDListEle->pNext;
-            }
-
-            /* Request active scan of specified SSIDs on selected channel (or all channels). */
-            result = m2m_wifi_request_scan_ssid_list(channel, ssidList);
-#endif
-        }
+        /* Request active scan of selected channel (or all channels). */
+        result = m2m_wifi_request_scan(channel);
     }
     else
     {
         /* Request passive scan of selected channel (or all channels). */
 #if defined(WDRV_WINC_DEVICE_WINC1500)
-        result = m2m_wifi_request_scan_passive(channel, pDcpt->pCtrl->scanPassiveScanTime);
+        result = m2m_wifi_request_scan_passive(channel, pDcpt->scanPassiveScanTime);
 #elif defined(WDRV_WINC_DEVICE_WINC3400)
         result = m2m_wifi_request_scan_passive(channel);
 #endif
@@ -221,11 +166,11 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindFirst
     }
 
     /* Update state to reflect a new scan has started. */
-    pDcpt->pCtrl->scanInProgress     = true;
-    pDcpt->pCtrl->scanIndex          = 0;
-    pDcpt->pCtrl->isBSSScanInfoValid = false;
-    pDcpt->pCtrl->scanNumScanResults = 0;
-    pDcpt->pCtrl->pfBSSFindNotifyCB  = pfNotifyCallback;
+    pDcpt->scanInProgress     = true;
+    pDcpt->scanIndex          = 0;
+    pDcpt->isBSSScanInfoValid = false;
+    pDcpt->scanNumScanResults = 0;
+    pDcpt->pfBSSFindNotifyCB  = pfNotifyCallback;
 
     return WDRV_WINC_STATUS_OK;
 }
@@ -259,7 +204,7 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindNext
     WDRV_WINC_DCPT *const pDcpt = (WDRV_WINC_DCPT *const)handle;
 
     /* Ensure the driver handle is valid. */
-    if ((DRV_HANDLE_INVALID == handle) || (NULL == pDcpt) || (NULL == pDcpt->pCtrl))
+    if (NULL == pDcpt)
     {
         return WDRV_WINC_STATUS_INVALID_ARG;
     }
@@ -271,28 +216,28 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindNext
     }
 
     /* Cannot request results while a scan is in progress. */
-    if (true == pDcpt->pCtrl->scanInProgress)
+    if (true == pDcpt->scanInProgress)
     {
         return WDRV_WINC_STATUS_SCAN_IN_PROGRESS;
     }
 
     /* Check if the request would exceed the number of results
        available, signal find operation end if so. */
-    pDcpt->pCtrl->scanIndex++;
+    pDcpt->scanIndex++;
 
-    if (pDcpt->pCtrl->scanIndex >= m2m_wifi_get_num_ap_found())
+    if (pDcpt->scanIndex >= m2m_wifi_get_num_ap_found())
     {
-        pDcpt->pCtrl->scanIndex--;
+        pDcpt->scanIndex--;
 
         return WDRV_WINC_STATUS_BSS_FIND_END;
     }
 
     /* Request the next BBS results from the WINC device. */
-    m2m_wifi_req_scan_result(pDcpt->pCtrl->scanIndex);
+    m2m_wifi_req_scan_result(pDcpt->scanIndex);
 
     /* Invalidate the BSS scan cache and store callback supplied. */
-    pDcpt->pCtrl->isBSSScanInfoValid = false;
-    pDcpt->pCtrl->pfBSSFindNotifyCB  = pfNotifyCallback;
+    pDcpt->isBSSScanInfoValid = false;
+    pDcpt->pfBSSFindNotifyCB  = pfNotifyCallback;
 
     return WDRV_WINC_STATUS_OK;
 }
@@ -326,7 +271,7 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindReset
     WDRV_WINC_DCPT *const pDcpt = (WDRV_WINC_DCPT *const)handle;
 
     /* Ensure the driver handle is valid. */
-    if ((DRV_HANDLE_INVALID == handle) || (NULL == pDcpt) || (NULL == pDcpt->pCtrl))
+    if (NULL == pDcpt)
     {
         return WDRV_WINC_STATUS_INVALID_ARG;
     }
@@ -338,7 +283,7 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindReset
     }
 
     /* Cannot reset the find operation while a scan is in progress. */
-    if (true == pDcpt->pCtrl->scanInProgress)
+    if (true == pDcpt->scanInProgress)
     {
         return WDRV_WINC_STATUS_SCAN_IN_PROGRESS;
     }
@@ -350,13 +295,13 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindReset
     }
 
     /* Reset to first BSS results and request them from the WINC device. */
-    pDcpt->pCtrl->scanIndex = 0;
+    pDcpt->scanIndex = 0;
 
-    m2m_wifi_req_scan_result(pDcpt->pCtrl->scanIndex);
+    m2m_wifi_req_scan_result(pDcpt->scanIndex);
 
     /* Invalidate the BSS scan cache and store callback supplied. */
-    pDcpt->pCtrl->isBSSScanInfoValid = false;
-    pDcpt->pCtrl->pfBSSFindNotifyCB  = pfNotifyCallback;
+    pDcpt->isBSSScanInfoValid = false;
+    pDcpt->pfBSSFindNotifyCB  = pfNotifyCallback;
 
     return WDRV_WINC_STATUS_OK;
 }
@@ -392,7 +337,7 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindGetInfo
     WDRV_WINC_DCPT *const pDcpt = (WDRV_WINC_DCPT *const)handle;
 
     /* Ensure the driver handle and user pointer is valid. */
-    if ((DRV_HANDLE_INVALID == handle) || (NULL == pDcpt) || (NULL == pDcpt->pCtrl) || (NULL == pBSSInfo))
+    if ((NULL == pDcpt) || (NULL == pBSSInfo))
     {
         return WDRV_WINC_STATUS_INVALID_ARG;
     }
@@ -404,13 +349,13 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindGetInfo
     }
 
     // Check if the BSS scan cache is valid. */
-    if (false == pDcpt->pCtrl->isBSSScanInfoValid)
+    if (false == pDcpt->isBSSScanInfoValid)
     {
         return WDRV_WINC_STATUS_NO_BSS_INFO;
     }
 
     /* Copy BSS scan cache to user supplied buffer. */
-    memcpy(pBSSInfo, &pDcpt->pCtrl->lastBSSScanInfo, sizeof(WDRV_WINC_BSS_INFO));
+    memcpy(pBSSInfo, &pDcpt->lastBSSScanInfo, sizeof(WDRV_WINC_BSS_INFO));
 
     return WDRV_WINC_STATUS_OK;
 }
@@ -451,7 +396,7 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindSetScanParameters
     WDRV_WINC_DCPT *const pDcpt = (WDRV_WINC_DCPT *const)handle;
 
     /* Ensure the driver handle is valid. */
-    if ((DRV_HANDLE_INVALID == handle) || (NULL == pDcpt) || (NULL == pDcpt->pCtrl))
+    if (NULL == pDcpt)
     {
         return WDRV_WINC_STATUS_INVALID_ARG;
     }
@@ -467,33 +412,33 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindSetScanParameters
        differently on WINC1500 vs WINC3400. */
 
     /* Check for update to Active Scan Time. */
-    if ((0 != activeSlotTime) && (pDcpt->pCtrl->scanActiveScanTime != activeSlotTime))
+    if ((0 != activeSlotTime) && (pDcpt->scanActiveScanTime != activeSlotTime))
     {
-        pDcpt->pCtrl->scanActiveScanTime = activeSlotTime;
-        pDcpt->pCtrl->scanParamDefault = false;
+        pDcpt->scanActiveScanTime = activeSlotTime;
+        pDcpt->scanParamDefault = false;
     }
 
     /* Check for update to Passive Scan Time. */
-    if ((0 != passiveSlotTime) && (pDcpt->pCtrl->scanPassiveScanTime != passiveSlotTime))
+    if ((0 != passiveSlotTime) && (pDcpt->scanPassiveScanTime != passiveSlotTime))
     {
-        pDcpt->pCtrl->scanPassiveScanTime = passiveSlotTime;
+        pDcpt->scanPassiveScanTime = passiveSlotTime;
 #ifdef WDRV_WINC_DEVICE_WINC3400
-        pDcpt->pCtrl->scanParamDefault = false;
+        pDcpt->scanParamDefault = false;
 #endif
     }
 
     /* Check for update to Number of Slots. */
-    if ((0 != numSlots) && (pDcpt->pCtrl->scanNumSlots != numSlots))
+    if ((0 != numSlots) && (pDcpt->scanNumSlots != numSlots))
     {
-        pDcpt->pCtrl->scanNumSlots = numSlots;
-        pDcpt->pCtrl->scanParamDefault = false;
+        pDcpt->scanNumSlots = numSlots;
+        pDcpt->scanParamDefault = false;
     }
 
     /* Check for update to Number of Probes. */
-    if ((0 != numProbes) && (pDcpt->pCtrl->scanNumProbes != numProbes))
+    if ((0 != numProbes) && (pDcpt->scanNumProbes != numProbes))
     {
-        pDcpt->pCtrl->scanNumProbes = numProbes;
-        pDcpt->pCtrl->scanParamDefault = false;
+        pDcpt->scanNumProbes = numProbes;
+        pDcpt->scanParamDefault = false;
     }
 
     return WDRV_WINC_STATUS_OK;
@@ -529,7 +474,7 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindSetRSSIThreshold
     WDRV_WINC_DCPT *const pDcpt = (WDRV_WINC_DCPT *const)handle;
 
     /* Ensure the driver handle is valid. */
-    if ((DRV_HANDLE_INVALID == handle) || (NULL == pDcpt) || (NULL == pDcpt->pCtrl))
+    if (NULL == pDcpt)
     {
         return WDRV_WINC_STATUS_INVALID_ARG;
     }
@@ -542,8 +487,8 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindSetRSSIThreshold
 
     /* Update RSSI Threshold and tag the defaults have changed to force new
        parameters to be loaded into WINC device. */
-    pDcpt->pCtrl->scanRSSIThreshold = rssiThreshold;
-    pDcpt->pCtrl->scanParamDefault  = false;
+    pDcpt->scanRSSIThreshold = rssiThreshold;
+    pDcpt->scanParamDefault  = false;
 
     return WDRV_WINC_STATUS_OK;
 }
@@ -578,7 +523,7 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindSetEnabledChannels
     WDRV_WINC_DCPT *const pDcpt = (WDRV_WINC_DCPT *const)handle;
 
     /* Ensure the driver handle is valid. */
-    if ((DRV_HANDLE_INVALID == handle) || (NULL == pDcpt) || (NULL == pDcpt->pCtrl))
+    if (NULL == pDcpt)
     {
         return WDRV_WINC_STATUS_INVALID_ARG;
     }
@@ -590,80 +535,13 @@ WDRV_WINC_STATUS WDRV_WINC_BSSFindSetEnabledChannels
     }
 
     /* Update the selected channel mask. */
-    if (M2M_SUCCESS != m2m_wifi_set_scan_region(channelMask))
+    if (M2M_ERR_FAIL == m2m_wifi_set_scan_region(channelMask))
     {
         return WDRV_WINC_STATUS_REQUEST_ERROR;
     }
 
     return WDRV_WINC_STATUS_OK;
 }
-
-//*******************************************************************************
-/*
-  Function:
-    WDRV_WINC_STATUS WDRV_WINC_BSSFindSetScanMatchMode
-    (
-        DRV_HANDLE handle,
-        WDRV_WINC_SCAN_MATCH_MODE matchMode
-    )
-
-  Summary:
-    Configures the scan matching mode.
-
-  Description:
-    This function configures the matching mode, either stop on first or
-      match all, used when scanning for SSIDs.
-
-  Remarks:
-    See wdrv_winc_bssfind.h for usage information.
-
-*/
-
-#ifdef WDRV_WINC_DEVICE_SCAN_STOP_ON_FIRST
-WDRV_WINC_STATUS WDRV_WINC_BSSFindSetScanMatchMode
-(
-    DRV_HANDLE handle,
-    WDRV_WINC_SCAN_MATCH_MODE matchMode
-)
-{
-    WDRV_WINC_DCPT *const pDcpt = (WDRV_WINC_DCPT *const)handle;
-    uint8_t stopScanOption;
-
-    /* Ensure the driver handle is valid. */
-    if ((DRV_HANDLE_INVALID == handle) || (NULL == pDcpt) || (NULL == pDcpt->pCtrl))
-    {
-        return WDRV_WINC_STATUS_INVALID_ARG;
-    }
-
-    /* Ensure the driver instance has been opened for use. */
-    if (false == pDcpt->isOpen)
-    {
-        return WDRV_WINC_STATUS_NOT_OPEN;
-    }
-
-    /* Validate the match mode. */
-    if (WDRV_WINC_SCAN_MATCH_MODE_STOP_ON_FIRST == matchMode)
-    {
-        stopScanOption = 1;
-    }
-    else if (WDRV_WINC_SCAN_MATCH_MODE_FIND_ALL == matchMode)
-    {
-        stopScanOption = 0;
-    }
-    else
-    {
-        return WDRV_WINC_STATUS_INVALID_ARG;
-    }
-
-    /* Request a change in scan matching. */
-    if (M2M_SUCCESS != m2m_wifi_set_stop_scan_on_first(stopScanOption))
-    {
-        return WDRV_WINC_STATUS_REQUEST_ERROR;
-    }
-
-    return WDRV_WINC_STATUS_OK;
-}
-#endif
 
 //*******************************************************************************
 /*
@@ -687,12 +565,8 @@ uint8_t WDRV_WINC_BSSFindGetNumBSSResults(DRV_HANDLE handle)
 
     /* Ensure the driver handle is valid and the instance is open.
        Ensure a scan is not already in progress. */
-    if ((DRV_HANDLE_INVALID == handle) || (NULL == pDcpt) || (NULL == pDcpt->pCtrl))
-    {
-        return 0;
-    }
-
-    if ((false == pDcpt->isOpen) || (true == pDcpt->pCtrl->scanInProgress))
+    if ((NULL == pDcpt) || (false == pDcpt->isOpen)
+        || (true == pDcpt->scanInProgress))
     {
         return 0;
     }
@@ -722,15 +596,10 @@ bool WDRV_WINC_BSSFindInProgress(DRV_HANDLE handle)
     WDRV_WINC_DCPT *const pDcpt = (WDRV_WINC_DCPT *const)handle;
 
     /* Ensure the driver handle is valid and the instance is open. */
-    if ((DRV_HANDLE_INVALID == handle) || (NULL == pDcpt) || (NULL == pDcpt->pCtrl))
+    if ((NULL == pDcpt) || (false == pDcpt->isOpen))
     {
         return false;
     }
 
-    if (false == pDcpt->isOpen)
-    {
-        return false;
-    }
-
-    return pDcpt->pCtrl->scanInProgress;
+    return pDcpt->scanInProgress;
 }

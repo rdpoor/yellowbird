@@ -254,8 +254,6 @@ void WDRV_WINC_SPIDeinitialize(void)
     OSAL_SEM_Delete(&rxSyncSem);
 
     DRV_SPI_Close(spiHandle);
-
-    spiHandle = DRV_HANDLE_INVALID;
 }
 
 //DOM-IGNORE-END

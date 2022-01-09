@@ -98,13 +98,14 @@ bool WDRV_WINC_BSSCtxIsValid
     }
 
     /* Ensure the channels are valid. */
-    if ((pBSSCtx->channel > WDRV_WINC_CID_2_4G_CH14) && (pBSSCtx->channel != WDRV_WINC_ALL_CHANNELS))
+    if ((!pBSSCtx->channel) ||
+        ((pBSSCtx->channel > 14) && (pBSSCtx->channel != WDRV_WINC_ALL_CHANNELS)))
     {
         return false;
     }
 
     /* Ensure the SSID length is valid. */
-    if (pBSSCtx->ssid.length > WDRV_WINC_MAX_SSID_LEN)
+    if (pBSSCtx->ssid.length > 32)
     {
         return false;
     }
@@ -117,7 +118,7 @@ bool WDRV_WINC_BSSCtxIsValid
         uint8_t macAddrChk;
 
         macAddrChk = 0;
-        for (i=0; i<WDRV_WINC_MAC_ADDR_LEN; i++)
+        for (i=0; i<M2M_MAC_ADDRES_LEN; i++)
         {
             macAddrChk |= pBSSCtx->bssid.addr[i];
         }
@@ -127,7 +128,7 @@ bool WDRV_WINC_BSSCtxIsValid
             return false;
         }
     }
-#endif
+#endif    
 
     if (true == ssidValid)
     {
@@ -172,13 +173,13 @@ WDRV_WINC_STATUS WDRV_WINC_BSSCtxSetDefaults
     }
 
 #ifdef WDRV_WINC_DEVICE_EXT_CONNECT_PARAMS
-    memset(pBSSCtx->bssid.addr, 0, WDRV_WINC_MAC_ADDR_LEN);
+    memset(pBSSCtx->bssid.addr, 0, M2M_MAC_ADDRES_LEN);
     pBSSCtx->bssid.valid = false;
-#endif
+#endif    
 
     /* Set context to have no SSID, all channels and not cloaked. */
     pBSSCtx->ssid.length = 0;
-    pBSSCtx->channel     = WDRV_WINC_CID_ANY;
+    pBSSCtx->channel     = WDRV_WINC_ALL_CHANNELS;
     pBSSCtx->cloaked     = false;
 
     return WDRV_WINC_STATUS_OK;
@@ -214,13 +215,13 @@ WDRV_WINC_STATUS WDRV_WINC_BSSCtxSetSSID
 )
 {
     /* Ensure BSS context and SSID buffer and length are valid. */
-    if ((NULL == pBSSCtx) || (NULL == pSSID) || (ssidLength > WDRV_WINC_MAX_SSID_LEN))
+    if ((NULL == pBSSCtx) || (NULL == pSSID) || (ssidLength > 32))
     {
         return WDRV_WINC_STATUS_INVALID_ARG;
     }
 
     /* Copy the SSID ensure unused space is zeroed. */
-    memset(&pBSSCtx->ssid.name, 0, WDRV_WINC_MAX_SSID_LEN);
+    memset(&pBSSCtx->ssid.name, 0, 32);
     memcpy(&pBSSCtx->ssid.name, pSSID, ssidLength);
     pBSSCtx->ssid.length = ssidLength;
 
@@ -260,8 +261,8 @@ WDRV_WINC_STATUS WDRV_WINC_BSSCtxSetBSSID
     uint8_t *const pBSSID
 )
 {
-    /* Ensure BSS context is valid. */
-    if (NULL == pBSSCtx)
+    /* Ensure BSS context and SSID buffer and length are valid. */
+    if ((NULL == pBSSCtx) || (NULL == pBSSID))
     {
         return WDRV_WINC_STATUS_INVALID_ARG;
     }
@@ -269,12 +270,12 @@ WDRV_WINC_STATUS WDRV_WINC_BSSCtxSetBSSID
     if (NULL != pBSSID)
     {
         /* Copy the BSSID. */
-        memcpy(&pBSSCtx->bssid, pBSSID, WDRV_WINC_MAC_ADDR_LEN);
+        memcpy(&pBSSCtx->bssid, pBSSID, M2M_MAC_ADDRES_LEN);
         pBSSCtx->bssid.valid = true;
     }
     else
     {
-        memset(&pBSSCtx->bssid, 0, WDRV_WINC_MAC_ADDR_LEN);
+        memset(&pBSSCtx->bssid, 0, M2M_MAC_ADDRES_LEN);
         pBSSCtx->bssid.valid = false;
     }
 
@@ -294,7 +295,7 @@ WDRV_WINC_STATUS WDRV_WINC_BSSCtxSetBSSID
     WDRV_WINC_STATUS WDRV_WINC_BSSCtxSetChannel
     (
         WDRV_WINC_BSS_CONTEXT *const pBSSCtx,
-        WDRV_WINC_CHANNEL_ID channel
+        uint8_t channel
     )
 
   Summary:
@@ -308,14 +309,12 @@ WDRV_WINC_STATUS WDRV_WINC_BSSCtxSetBSSID
 
 */
 
-WDRV_WINC_STATUS WDRV_WINC_BSSCtxSetChannel
-(
-    WDRV_WINC_BSS_CONTEXT *const pBSSCtx,
-    WDRV_WINC_CHANNEL_ID channel
-)
+WDRV_WINC_STATUS WDRV_WINC_BSSCtxSetChannel(
+                        WDRV_WINC_BSS_CONTEXT *const pBSSCtx, uint8_t channel)
 {
     /* Ensure BSS context and channels are valid. */
-    if ((NULL == pBSSCtx) || ((channel > WDRV_WINC_CID_2_4G_CH14) && (channel != WDRV_WINC_ALL_CHANNELS)))
+    if ((NULL == pBSSCtx) || (!channel) ||
+        ((channel > 14) && (channel != WDRV_WINC_ALL_CHANNELS)))
     {
         return WDRV_WINC_STATUS_INVALID_ARG;
     }
