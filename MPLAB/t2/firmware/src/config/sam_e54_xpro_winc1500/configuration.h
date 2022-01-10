@@ -146,6 +146,9 @@ extern "C" {
 #define DRV_SDSPI_SPEED_HZ_IDX0                 5000000
 #define DRV_SDSPI_POLLING_INTERVAL_MS_IDX0      1000
 
+#define DRV_SDSPI_DMA_MODE
+#define DRV_SDSPI_XMIT_DMA_CH_IDX0              SYS_DMA_CHANNEL_4
+#define DRV_SDSPI_RCV_DMA_CH_IDX0               SYS_DMA_CHANNEL_5
 
 
 

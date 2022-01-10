@@ -20,13 +20,13 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: 4F1E691F70878F4E114F5C6BDB4BD606
-- generatedChecksum: 449FA563F541ED0A81DDDC36E11FA960
+- generatedChecksum: EA07E8FFC33888682A6E7D2C7052846C
   logicalPath: config/sam_e54_xpro_winc1500/driver/sdspi
   name: drv_sdspi.c
   physicalPath: driver/sdspi/src
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 449FA563F541ED0A81DDDC36E11FA960
+  userChecksum: EA07E8FFC33888682A6E7D2C7052846C
 - generatedChecksum: 997ACCDD95519138D9B4922484450937
   logicalPath: config/sam_e54_xpro_winc1500/driver/sdspi
   name: drv_sdspi_file_system.c
@@ -34,13 +34,13 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: 997ACCDD95519138D9B4922484450937
-- generatedChecksum: E2B55682069B9DC7BE9F6E87B4ACDEE3
+- generatedChecksum: 35A00EF5FD0BB5A8CC8635A25D502706
   logicalPath: config/sam_e54_xpro_winc1500/driver/sdspi
   name: drv_sdspi_plib_interface.c
   physicalPath: driver/sdspi/src
   security: NON_SECURE
   type: SOURCE
-  userChecksum: E2B55682069B9DC7BE9F6E87B4ACDEE3
+  userChecksum: 35A00EF5FD0BB5A8CC8635A25D502706
 - generatedChecksum: 20EC657CE27B6AA7940F9E7C32673ABF
   logicalPath: config/sam_e54_xpro_winc1500/driver/spi
   name: drv_spi.c
@@ -97,20 +97,20 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: AF984BE0991599B02E1D672FDFDA2D8E
-- generatedChecksum: 628DADFB58E3F039DE4A2B8232E2884A
+- generatedChecksum: 06C83C0B52368F08069CD731D04D5F07
   logicalPath: config/sam_e54_xpro_winc1500
   name: initialization.c
   physicalPath: ''
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 628DADFB58E3F039DE4A2B8232E2884A
-- generatedChecksum: C1D21A7D045CF7957B15EF229BA1E41C
+  userChecksum: 06C83C0B52368F08069CD731D04D5F07
+- generatedChecksum: 3FBEDB1FFB9C41AF9A1E7748CB3F2BB7
   logicalPath: config/sam_e54_xpro_winc1500
   name: interrupts.c
   physicalPath: ''
   security: NON_SECURE
   type: SOURCE
-  userChecksum: C1D21A7D045CF7957B15EF229BA1E41C
+  userChecksum: 3FBEDB1FFB9C41AF9A1E7748CB3F2BB7
 - generatedChecksum: 6513F2461B8F476B68CA73906086047F
   logicalPath: config/sam_e54_xpro_winc1500
   name: libc_syscalls.c
@@ -209,13 +209,13 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: D903E8D9DCBC4107D0AA841E07F653BA
-- generatedChecksum: FD1DED4355E1F25E748980115FA306E5
+- generatedChecksum: 258CDE021CA1C74F330D097F3C4DFDE2
   logicalPath: config/sam_e54_xpro_winc1500/peripheral/dmac
   name: plib_dmac.c
   physicalPath: peripheral/dmac
   security: NON_SECURE
   type: SOURCE
-  userChecksum: FD1DED4355E1F25E748980115FA306E5
+  userChecksum: 258CDE021CA1C74F330D097F3C4DFDE2
 - generatedChecksum: 0FC2EA05ACA32A17A5AC975D3882448C
   logicalPath: config/sam_e54_xpro_winc1500/peripheral/eic
   name: plib_eic.c
@@ -230,13 +230,13 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: C3ECDED3D6301DB0DE622293ED615D21
-- generatedChecksum: 18EC3B53F20A728A7148C592042335D1
+- generatedChecksum: 54AFF9CC2F6E07B897A2B3996AFEE65C
   logicalPath: config/sam_e54_xpro_winc1500/peripheral/nvic
   name: plib_nvic.c
   physicalPath: peripheral/nvic
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 18EC3B53F20A728A7148C592042335D1
+  userChecksum: 54AFF9CC2F6E07B897A2B3996AFEE65C
 - generatedChecksum: 903E0413B53BA9E8980C740E65F59966
   logicalPath: config/sam_e54_xpro_winc1500/peripheral/nvmctrl
   name: plib_nvmctrl.c
@@ -720,13 +720,13 @@ files:
   security: NON_SECURE
   type: HEADER
   userChecksum: 52F91AC0727F2311EDA0E3BAA7719A9F
-- generatedChecksum: 1444F66B5FF9E643A6DA8A03A91C862E
+- generatedChecksum: F24D7ABF4B429CA856A6F860D2BCDDBA
   logicalPath: config/sam_e54_xpro_winc1500
   name: configuration.h
   physicalPath: ''
   security: NON_SECURE
   type: HEADER
-  userChecksum: 1444F66B5FF9E643A6DA8A03A91C862E
+  userChecksum: F24D7ABF4B429CA856A6F860D2BCDDBA
 - generatedChecksum: 7EF1FAD7778FEEAC9467270306D7F7C0
   logicalPath: packs/CMSIS/CMSIS/Core/Include
   name: core_cm4.h
@@ -818,27 +818,27 @@ files:
   security: NON_SECURE
   type: HEADER
   userChecksum: 341441BD242D06D0382178FB46ECDAC1
-- generatedChecksum: D9AADD16BD31DAD2FFDE8F5B5761F407
+- generatedChecksum: 4DC22A7C2D80FAB72917280C4A9952F5
   logicalPath: config/sam_e54_xpro_winc1500/driver/sdspi
   name: drv_sdspi_definitions.h
   physicalPath: driver/sdspi
   security: NON_SECURE
   type: HEADER
-  userChecksum: D9AADD16BD31DAD2FFDE8F5B5761F407
-- generatedChecksum: 201F6FE6245BB954615B746E45F27DF3
+  userChecksum: 4DC22A7C2D80FAB72917280C4A9952F5
+- generatedChecksum: 81F51BC60EEF8E9D1FB9A7C037CA5480
   logicalPath: config/sam_e54_xpro_winc1500/driver/sdspi
   name: drv_sdspi_local.h
   physicalPath: driver/sdspi/src
   security: NON_SECURE
   type: HEADER
-  userChecksum: 201F6FE6245BB954615B746E45F27DF3
-- generatedChecksum: 5E207CAE2C7AD361284B04C40F28E26C
+  userChecksum: 81F51BC60EEF8E9D1FB9A7C037CA5480
+- generatedChecksum: 050223C260DEA418F4C01E2CCC986197
   logicalPath: config/sam_e54_xpro_winc1500/driver/sdspi
   name: drv_sdspi_plib_interface.h
   physicalPath: driver/sdspi/src
   security: NON_SECURE
   type: HEADER
-  userChecksum: 5E207CAE2C7AD361284B04C40F28E26C
+  userChecksum: 050223C260DEA418F4C01E2CCC986197
 - generatedChecksum: F454D5E0E6162B53958549B1D524C549
   logicalPath: config/sam_e54_xpro_winc1500/driver/spi
   name: drv_spi.h
@@ -1021,13 +1021,13 @@ files:
   security: NON_SECURE
   type: HEADER
   userChecksum: A25CDAA1015B6F4D86DDA6F4F98FADAE
-- generatedChecksum: 8BF24261567993FFD4A786A40BF02051
+- generatedChecksum: 0D0DDA4CF703190FF0FF26F7C88E3CF0
   logicalPath: config/sam_e54_xpro_winc1500
   name: interrupts.h
   physicalPath: ''
   security: NON_SECURE
   type: HEADER
-  userChecksum: 8BF24261567993FFD4A786A40BF02051
+  userChecksum: 0D0DDA4CF703190FF0FF26F7C88E3CF0
 - generatedChecksum: 67425BB33C9075607E40580599779775
   logicalPath: config/sam_e54_xpro_winc1500/driver/winc/include/drv/driver
   name: m2m_hif.h
@@ -1273,13 +1273,13 @@ files:
   security: NON_SECURE
   type: HEADER
   userChecksum: 95A89CFFC2B67EA718036EF9B8805872
-- generatedChecksum: 37D836F27FF1CF524CCA9F754521BB7D
+- generatedChecksum: D90DA071FA1266DA92A6A8B612B9ED9B
   logicalPath: config/sam_e54_xpro_winc1500/peripheral/dmac
   name: plib_dmac.h
   physicalPath: peripheral/dmac
   security: NON_SECURE
   type: HEADER
-  userChecksum: 37D836F27FF1CF524CCA9F754521BB7D
+  userChecksum: D90DA071FA1266DA92A6A8B612B9ED9B
 - generatedChecksum: 7B0047FE6925F2558CEAE5ACFD7E4677
   logicalPath: config/sam_e54_xpro_winc1500/peripheral/eic
   name: plib_eic.h

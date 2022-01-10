@@ -146,6 +146,17 @@ const DRV_SDSPI_INIT drvSDSPI0InitData =
 
     .isFsEnabled            = true,
 
+    /* DMA Channel for Transmit */
+    .txDMAChannel           = DRV_SDSPI_XMIT_DMA_CH_IDX0,
+
+    /* DMA Channel for Receive */
+    .rxDMAChannel           = DRV_SDSPI_RCV_DMA_CH_IDX0,
+
+    /* SPI Transmit Register */
+    .txAddress              = (void *)&(SERCOM6_REGS->SPIM.SERCOM_DATA),
+
+    /* SPI Receive Register */
+    .rxAddress              = (void *)&(SERCOM6_REGS->SPIM.SERCOM_DATA),
 };
 
 // </editor-fold>

@@ -62,6 +62,8 @@ static CACHE_ALIGN uint8_t gDrvSDSPICsdData [DRV_SDSPI_INSTANCES_NUMBER][CACHE_A
 static CACHE_ALIGN uint8_t gDrvSDSPICidData [DRV_SDSPI_INSTANCES_NUMBER][CACHE_ALIGNED_SIZE_GET(20)];
 static CACHE_ALIGN uint8_t gDrvSDSPITempCidData [DRV_SDSPI_INSTANCES_NUMBER][CACHE_ALIGNED_SIZE_GET(20)];
 
+/* Dummy data transmitted by TX DMA, common to all driver instances. */
+static CACHE_ALIGN uint8_t  txCommonDummyData[CACHE_ALIGNED_SIZE_GET(4)];
 
 static DRV_SDSPI_OBJ gDrvSDSPIObj[DRV_SDSPI_INSTANCES_NUMBER];
 
@@ -2159,6 +2161,10 @@ SYS_MODULE_OBJ DRV_SDSPI_Initialize
     dObj->remapClockPhase       = sdSPIInit->remapClockPhase;
     dObj->remapClockPolarity    = sdSPIInit->remapClockPolarity;
     dObj->remapDataBits         = sdSPIInit->remapDataBits;
+    dObj->rxDMAChannel          = sdSPIInit->rxDMAChannel;
+    dObj->txDMAChannel          = sdSPIInit->txDMAChannel;
+    dObj->txAddress             = sdSPIInit->txAddress;
+    dObj->rxAddress             = sdSPIInit->rxAddress;
 
     dObj->status                = SYS_STATUS_UNINITIALIZED;
     dObj->inUse                 = true;
@@ -2202,9 +2208,26 @@ SYS_MODULE_OBJ DRV_SDSPI_Initialize
 
 
 
+    /* Each driver instance points to the common dummy data array. */
+    dObj->txDummyData            = txCommonDummyData;
 
-    /* Register call-back with the SPI PLIB */
-    dObj->spiPlib->callbackRegister(_DRV_SDSPI_SPIPlibCallbackHandler, (uintptr_t)dObj);
+    for (i = 0; i < sizeof(txCommonDummyData); i++)
+    {
+        txCommonDummyData[i] = 0xFF;
+    }
+
+    /* Register call-backs with the DMA System Service */
+    if (dObj->txDMAChannel != SYS_DMA_CHANNEL_NONE && dObj->rxDMAChannel != SYS_DMA_CHANNEL_NONE)
+    {
+
+        SYS_DMA_ChannelCallbackRegister(dObj->txDMAChannel, _DRV_SDSPI_TX_DMA_CallbackHandler, (uintptr_t)dObj);
+        SYS_DMA_ChannelCallbackRegister(dObj->rxDMAChannel, _DRV_SDSPI_RX_DMA_CallbackHandler, (uintptr_t)dObj);
+    }
+    else
+    {
+        /* Register call-back with the SPI PLIB */
+        dObj->spiPlib->callbackRegister(_DRV_SDSPI_SPIPlibCallbackHandler, (uintptr_t)dObj);
+    }
 
     /* Register with file system*/
     if (sdSPIInit->isFsEnabled == true)

@@ -54,7 +54,7 @@
 // *****************************************************************************
 // *****************************************************************************
 
-#define DMAC_CHANNELS_NUMBER        4
+#define DMAC_CHANNELS_NUMBER        6
 
 #define DMAC_CRC_CHANNEL_OFFSET     0x20U
 
@@ -156,6 +156,30 @@ void DMAC_Initialize( void )
    dmacChannelObj[3].inUse = 1;
 
    DMAC_REGS->CHANNEL[3].DMAC_CHINTENSET = (DMAC_CHINTENSET_TERR_Msk | DMAC_CHINTENSET_TCMPL_Msk);
+
+
+   /***************** Configure DMA channel 4 ********************/
+   DMAC_REGS->CHANNEL[4].DMAC_CHCTRLA = DMAC_CHCTRLA_TRIGACT(2) | DMAC_CHCTRLA_TRIGSRC(17) | DMAC_CHCTRLA_THRESHOLD(0) | DMAC_CHCTRLA_BURSTLEN(0) ;
+
+   descriptor_section[4].DMAC_BTCTRL = DMAC_BTCTRL_BLOCKACT_INT | DMAC_BTCTRL_BEATSIZE_BYTE | DMAC_BTCTRL_VALID_Msk | DMAC_BTCTRL_SRCINC_Msk ;
+
+   DMAC_REGS->CHANNEL[4].DMAC_CHPRILVL = DMAC_CHPRILVL_PRILVL(0);
+
+   dmacChannelObj[4].inUse = 1;
+
+   DMAC_REGS->CHANNEL[4].DMAC_CHINTENSET = (DMAC_CHINTENSET_TERR_Msk | DMAC_CHINTENSET_TCMPL_Msk);
+
+
+   /***************** Configure DMA channel 5 ********************/
+   DMAC_REGS->CHANNEL[5].DMAC_CHCTRLA = DMAC_CHCTRLA_TRIGACT(2) | DMAC_CHCTRLA_TRIGSRC(16) | DMAC_CHCTRLA_THRESHOLD(0) | DMAC_CHCTRLA_BURSTLEN(0) ;
+
+   descriptor_section[5].DMAC_BTCTRL = DMAC_BTCTRL_BLOCKACT_INT | DMAC_BTCTRL_BEATSIZE_BYTE | DMAC_BTCTRL_VALID_Msk | DMAC_BTCTRL_DSTINC_Msk ;
+
+   DMAC_REGS->CHANNEL[5].DMAC_CHPRILVL = DMAC_CHPRILVL_PRILVL(0);
+
+   dmacChannelObj[5].inUse = 1;
+
+   DMAC_REGS->CHANNEL[5].DMAC_CHINTENSET = (DMAC_CHINTENSET_TERR_Msk | DMAC_CHINTENSET_TCMPL_Msk);
 
     /* Enable the DMAC module & Priority Level x Enable */
     DMAC_REGS->DMAC_CTRL = DMAC_CTRL_DMAENABLE_Msk | DMAC_CTRL_LVLEN0_Msk | DMAC_CTRL_LVLEN1_Msk | DMAC_CTRL_LVLEN2_Msk | DMAC_CTRL_LVLEN3_Msk;
@@ -512,5 +536,18 @@ void DMAC_2_InterruptHandler( void )
 void DMAC_3_InterruptHandler( void )
 {
    _DMAC_interruptHandler(3);
+}
+
+void DMAC_OTHER_InterruptHandler( void )
+{
+    uint8_t channel = 0;
+
+    for(channel = 4; channel <= 5; channel++)
+    {
+        if ((DMAC_REGS->DMAC_INTSTATUS >> channel) & 0x1)
+        {
+            _DMAC_interruptHandler(channel);
+        }
+    }
 }
 

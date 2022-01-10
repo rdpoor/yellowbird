@@ -219,6 +219,20 @@ children:
       - type: Dynamic
         attributes: {id: core, value: '0'}
   - type: KeyValueSet
+    attributes: {id: DMAC_BTCTRL_BEATSIZE_CH_4}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: '0'}
+  - type: KeyValueSet
+    attributes: {id: DMAC_BTCTRL_BEATSIZE_CH_5}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: '0'}
+  - type: KeyValueSet
     attributes: {id: DMAC_BTCTRL_DSTINC_CH_0}
     children:
     - type: Values
@@ -241,6 +255,20 @@ children:
         attributes: {id: core, value: '0'}
   - type: KeyValueSet
     attributes: {id: DMAC_BTCTRL_DSTINC_CH_3}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: '1'}
+  - type: KeyValueSet
+    attributes: {id: DMAC_BTCTRL_DSTINC_CH_4}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: '0'}
+  - type: KeyValueSet
+    attributes: {id: DMAC_BTCTRL_DSTINC_CH_5}
     children:
     - type: Values
       children:
@@ -275,6 +303,20 @@ children:
       - type: Dynamic
         attributes: {id: core, value: '0'}
   - type: KeyValueSet
+    attributes: {id: DMAC_BTCTRL_SRCINC_CH_4}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: '1'}
+  - type: KeyValueSet
+    attributes: {id: DMAC_BTCTRL_SRCINC_CH_5}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: '0'}
+  - type: KeyValueSet
     attributes: {id: DMAC_CHCTRLA_TRIGACT_CH_0}
     children:
     - type: Values
@@ -297,6 +339,20 @@ children:
         attributes: {id: core, value: '1'}
   - type: KeyValueSet
     attributes: {id: DMAC_CHCTRLA_TRIGACT_CH_3}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: '1'}
+  - type: KeyValueSet
+    attributes: {id: DMAC_CHCTRLA_TRIGACT_CH_4}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: '1'}
+  - type: KeyValueSet
+    attributes: {id: DMAC_CHCTRLA_TRIGACT_CH_5}
     children:
     - type: Values
       children:
@@ -386,6 +442,48 @@ children:
       children:
       - type: Dynamic
         attributes: {id: core, value: '12'}
+  - type: Combo
+    attributes: {id: DMAC_CHCTRLA_TRIGSRC_CH_4}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: SERCOM6_Transmit}
+  - type: Boolean
+    attributes: {id: DMAC_CHCTRLA_TRIGSRC_CH_4_PERID_LOCK}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: 'true'}
+  - type: Integer
+    attributes: {id: DMAC_CHCTRLA_TRIGSRC_CH_4_PERID_VAL}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: '17'}
+  - type: Combo
+    attributes: {id: DMAC_CHCTRLA_TRIGSRC_CH_5}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: SERCOM6_Receive}
+  - type: Boolean
+    attributes: {id: DMAC_CHCTRLA_TRIGSRC_CH_5_PERID_LOCK}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: 'true'}
+  - type: Integer
+    attributes: {id: DMAC_CHCTRLA_TRIGSRC_CH_5_PERID_VAL}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: '16'}
   - type: Boolean
     attributes: {id: DMAC_ENABLE_CH_0}
     children:
@@ -414,6 +512,20 @@ children:
       children:
       - type: Dynamic
         attributes: {id: core, value: 'true'}
+  - type: Boolean
+    attributes: {id: DMAC_ENABLE_CH_4}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: 'true'}
+  - type: Boolean
+    attributes: {id: DMAC_ENABLE_CH_5}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: 'true'}
   - type: File
     attributes: {id: DMAC_HEADER}
     children:
@@ -429,35 +541,35 @@ children:
     - type: Values
       children:
       - type: Dynamic
-        attributes: {id: core, value: '3'}
+        attributes: {id: core, value: '5'}
   - type: Boolean
     attributes: {id: DMAC_OTHER_INTERRUPT_ENABLE}
     children:
     - type: Values
       children:
       - type: Dynamic
-        attributes: {id: core, value: 'false'}
+        attributes: {id: core, value: 'true'}
   - type: Boolean
     attributes: {id: DMAC_OTHER_INTERRUPT_ENABLE_UPDATE}
     children:
     - type: Values
       children:
       - type: Dynamic
-        attributes: {id: core, value: 'true'}
+        attributes: {id: core, value: 'false'}
   - type: String
     attributes: {id: DMAC_OTHER_INTERRUPT_HANDLER}
     children:
     - type: Values
       children:
       - type: Dynamic
-        attributes: {id: core, value: DMAC_OTHER_Handler}
+        attributes: {id: core, value: DMAC_OTHER_InterruptHandler}
   - type: Boolean
     attributes: {id: DMAC_OTHER_INTERRUPT_HANDLER_LOCK}
     children:
     - type: Values
       children:
       - type: Dynamic
-        attributes: {id: core, value: 'false'}
+        attributes: {id: core, value: 'true'}
   - type: File
     attributes: {id: DMAC_SOURCE}
     children:
@@ -513,6 +625,20 @@ children:
       children:
       - type: Dynamic
         attributes: {id: core, value: '1'}
+  - type: Integer
+    attributes: {id: DMA_CH_FOR_SERCOM6_Receive}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: '5'}
+  - type: Integer
+    attributes: {id: DMA_CH_FOR_SERCOM6_Transmit}
+    children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: core, value: '4'}
   - type: Boolean
     attributes: {id: DMA_CH_NEEDED_FOR_SERCOM0_Receive}
     children:
@@ -547,14 +673,14 @@ children:
     - type: Values
       children:
       - type: Dynamic
-        attributes: {id: core, value: 'false'}
+        attributes: {id: core, value: 'true'}
   - type: Boolean
     attributes: {id: DMA_CH_NEEDED_FOR_SERCOM6_Transmit}
     children:
     - type: Values
       children:
       - type: Dynamic
-        attributes: {id: core, value: 'false'}
+        attributes: {id: core, value: 'true'}
   - type: Boolean
     attributes: {id: DMA_ENABLE}
     children:
@@ -1124,21 +1250,21 @@ children:
     - type: Values
       children:
       - type: Dynamic
-        attributes: {id: core, value: 'false'}
+        attributes: {id: core, value: 'true'}
   - type: String
     attributes: {id: NVIC_35_0_HANDLER}
     children:
     - type: Values
       children:
       - type: Dynamic
-        attributes: {id: core, value: DMAC_OTHER_Handler}
+        attributes: {id: core, value: DMAC_OTHER_InterruptHandler}
   - type: Boolean
     attributes: {id: NVIC_35_0_HANDLER_LOCK}
     children:
     - type: Values
       children:
       - type: Dynamic
-        attributes: {id: core, value: 'false'}
+        attributes: {id: core, value: 'true'}
   - type: Boolean
     attributes: {id: NVIC_46_0_ENABLE}
     children:

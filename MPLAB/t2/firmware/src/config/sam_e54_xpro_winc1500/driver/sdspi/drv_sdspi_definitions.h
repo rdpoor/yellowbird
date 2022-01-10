@@ -50,6 +50,7 @@
 // *****************************************************************************
 
 #include "system/ports/sys_ports.h"
+#include "system/dma/sys_dma.h"
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
@@ -214,6 +215,17 @@ typedef struct
 
     const uint32_t*                 remapClockPhase;
 
+    /* Transmit DMA Channel */
+    SYS_DMA_CHANNEL                 txDMAChannel;
+
+    /* Receive DMA Channel */
+    SYS_DMA_CHANNEL                 rxDMAChannel;
+
+    /* This is the SPI transmit register address. Used for DMA operation. */
+    void*                           txAddress;
+
+    /* This is the SPI receive register address. Used for DMA operation. */
+    void*                           rxAddress;
 
 
     bool                            isFsEnabled;
