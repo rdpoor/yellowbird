@@ -56,6 +56,7 @@
 #include "configuration.h"
 #include "definitions.h"
 #include "example.h"
+// #include "system/fs/sys_fs.h"
 #include "wdrv_winc_client_api.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -63,10 +64,17 @@
 // *****************************************************************************
 // Private types and definitions
 
+#define SD_MOUNT_NAME "/mnt/mydrive"
+#define SD_DEV_NAME "/dev/mmcblka1"
+#define SD_IMAGE_NAME "winc.img"
+#define MAX_MOUNT_RETRIES 255
+
 #define DEFINE_STATES                                                          \
   DEFINE_STATE(APP_STATE_INIT)                                                 \
   DEFINE_STATE(APP_STATE_WDRV_INIT_READY)                                      \
-  DEFINE_STATE(APP_STATE_WDRV_OPEN)
+  DEFINE_STATE(APP_STATE_MOUNTING_FILESYSTEM)                                  \
+  DEFINE_STATE(APP_STATE_WDRV_OPEN)                                            \
+  DEFINE_STATE(APP_STATE_ERROR)
 
 #undef DEFINE_STATE
 #define DEFINE_STATE(_name) _name,
@@ -85,6 +93,7 @@ typedef enum { DEFINE_STATES } APP_STATES;
  */
 typedef struct {
   APP_STATES state;
+  uint8_t mount_retries;
 } APP_DATA;
 
 // *****************************************************************************
@@ -129,18 +138,38 @@ void APP_Tasks(void) {
   } break;
 
   case APP_STATE_WDRV_INIT_READY: {
-    wdrvHandle = WDRV_WINC_Open(0, 0);
+    wdrvHandle = WDRV_WINC_Open(0, DRV_IO_INTENT_EXCLUSIVE);
 
     if (DRV_HANDLE_INVALID != wdrvHandle) {
-      APP_ExampleInitialize(wdrvHandle);
-      APP_SetState(APP_STATE_WDRV_OPEN);
+      SYS_DEBUG_MESSAGE(SYS_ERROR_INFO, "\nOpened WINC1500");
+      appData.mount_retries = MAX_MOUNT_RETRIES;
+      // APP_ExampleInitialize(wdrvHandle);
+      APP_SetState(APP_STATE_MOUNTING_FILESYSTEM);
     }
   } break;
 
+  case APP_STATE_MOUNTING_FILESYSTEM: {
+    if (appData.mount_retries == 0) {
+      SYS_CONSOLE_PRINT("\nFailed to mount SD card after %d attempts",
+                        MAX_MOUNT_RETRIES);
+      APP_SetState(APP_STATE_ERROR);
+    } else if (SYS_FS_Mount(SD_DEV_NAME, SD_MOUNT_NAME, FAT, 0, NULL) != 0) {
+      // The disk was not mounted -- retry until mount_retries exhausted
+      appData.mount_retries -= 1;
+      // stay in this state...
+    } else {
+      SYS_CONSOLE_PRINT("\nSD card mounted after %d attempts",
+                        MAX_MOUNT_RETRIES - appData.mount_retries);
+      APP_SetState(APP_STATE_WDRV_OPEN);
+    }
+
+  } break;
+
   case APP_STATE_WDRV_OPEN: {
-    APP_ExampleTasks(wdrvHandle);
+    // APP_ExampleTasks(wdrvHandle);
   }    break;
 
+  case APP_STATE_ERROR:
   default: {
     /* TODO: Handle error in application's state machine. */
   } break;
