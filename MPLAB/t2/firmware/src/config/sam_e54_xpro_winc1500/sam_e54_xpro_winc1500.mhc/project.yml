@@ -97,13 +97,13 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: AF984BE0991599B02E1D672FDFDA2D8E
-- generatedChecksum: 06C83C0B52368F08069CD731D04D5F07
+- generatedChecksum: 9299C65F15FB52F65D5A4D92CBC8186A
   logicalPath: config/sam_e54_xpro_winc1500
   name: initialization.c
   physicalPath: ''
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 06C83C0B52368F08069CD731D04D5F07
+  userChecksum: 9299C65F15FB52F65D5A4D92CBC8186A
 - generatedChecksum: 3FBEDB1FFB9C41AF9A1E7748CB3F2BB7
   logicalPath: config/sam_e54_xpro_winc1500
   name: interrupts.c
@@ -363,13 +363,13 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: 5182754E707E008E4C8788FCAB430380
-- generatedChecksum: 64197587C5A197FD05E94AB039A2DD66
+- generatedChecksum: 9C4B71FF77DB16BC8FF11B79F8FB7EB1
   logicalPath: config/sam_e54_xpro_winc1500/system/fs
   name: sys_fs.c
   physicalPath: system/fs/src
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 64197587C5A197FD05E94AB039A2DD66
+  userChecksum: 9C4B71FF77DB16BC8FF11B79F8FB7EB1
 - generatedChecksum: 1F79CD9E378D98E657FCEB0552B2B659
   logicalPath: config/sam_e54_xpro_winc1500/system/fs
   name: sys_fs_fat_interface.c
@@ -377,13 +377,13 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: 1F79CD9E378D98E657FCEB0552B2B659
-- generatedChecksum: 8A608E11F4981AA9CC52EA5EF5C76F4A
+- generatedChecksum: 56CAB83269AF585DADCDC124D19DCA5A
   logicalPath: config/sam_e54_xpro_winc1500/system/fs
   name: sys_fs_media_manager.c
   physicalPath: system/fs/src
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 8A608E11F4981AA9CC52EA5EF5C76F4A
+  userChecksum: 56CAB83269AF585DADCDC124D19DCA5A
 - generatedChecksum: 02C3C1B519E59992810626BB6098CF56
   logicalPath: config/sam_e54_xpro_winc1500/system/int
   name: sys_int.c
@@ -720,13 +720,13 @@ files:
   security: NON_SECURE
   type: HEADER
   userChecksum: 52F91AC0727F2311EDA0E3BAA7719A9F
-- generatedChecksum: F24D7ABF4B429CA856A6F860D2BCDDBA
+- generatedChecksum: D9E154741DBCAFF42FD919BCCD4EBB8E
   logicalPath: config/sam_e54_xpro_winc1500
   name: configuration.h
   physicalPath: ''
   security: NON_SECURE
   type: HEADER
-  userChecksum: F24D7ABF4B429CA856A6F860D2BCDDBA
+  userChecksum: D9E154741DBCAFF42FD919BCCD4EBB8E
 - generatedChecksum: 7EF1FAD7778FEEAC9467270306D7F7C0
   logicalPath: packs/CMSIS/CMSIS/Core/Include
   name: core_cm4.h
