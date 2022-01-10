@@ -463,7 +463,8 @@ int8_t m2m_wifi_init_start(tstrWifiInitParam *pWifiInitParam)
 
     if(M2M_ERR_FW_VER_MISMATCH == ret)
     {
-        M2M_ERR("Mismatch Firmware Version\r\n");
+        M2M_ERR("Mismatch Firmware Version, continuing anyway...\r\n");
+        ret = M2M_SUCCESS;
     }
 
     goto _EXIT0;
@@ -2046,8 +2047,8 @@ int8_t m2m_wifi_enable_XO_during_sleep(uint8_t bXOSleepEnable)
     if(0 == bXOSleepEnable || 1 == bXOSleepEnable)
     {
         strM2mWiFiXOSleepEnable.u8EnableXODuringSleep = bXOSleepEnable;
-        return hif_send(M2M_REQ_GROUP_WIFI, M2M_WIFI_REQ_XO_SLEEP_ENABLE, 
-                        (uint8_t *) &strM2mWiFiXOSleepEnable, sizeof(strM2mWiFiXOSleepEnable), NULL, 0, 0);	
+        return hif_send(M2M_REQ_GROUP_WIFI, M2M_WIFI_REQ_XO_SLEEP_ENABLE,
+                        (uint8_t *) &strM2mWiFiXOSleepEnable, sizeof(strM2mWiFiXOSleepEnable), NULL, 0, 0);
     }
     else
     {
