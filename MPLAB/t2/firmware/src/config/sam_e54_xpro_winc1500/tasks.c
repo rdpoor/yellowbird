@@ -73,9 +73,14 @@ void SYS_Tasks ( void )
 {
     /* Maintain system services */
     
+SYS_FS_Tasks();
+
+
 
 
     /* Maintain Device Drivers */
+    DRV_SDSPI_Tasks(sysObj.drvSDSPI0);
+
     WDRV_WINC_Tasks(sysObj.drvWifiWinc);
 
 

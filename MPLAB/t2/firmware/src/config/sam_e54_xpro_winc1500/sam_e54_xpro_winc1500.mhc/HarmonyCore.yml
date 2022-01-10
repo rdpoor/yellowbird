@@ -41,13 +41,13 @@ children:
         - type: Pairs
           children:
           - type: Pair
-            attributes: {description: 'TRUE', value: '1', key: ENABLE_DRV_COMMON}
+            attributes: {description: 'TRUE', value: '3', key: ENABLE_DRV_COMMON}
           - type: Pair
-            attributes: {description: 'TRUE', value: '2', key: ENABLE_SYS_COMMON}
+            attributes: {description: 'TRUE', value: '4', key: ENABLE_SYS_COMMON}
           - type: Pair
-            attributes: {description: 'FALSE', value: '0', key: ENABLE_SYS_MEDIA}
+            attributes: {description: 'TRUE', value: '2', key: ENABLE_SYS_MEDIA}
           - type: Pair
-            attributes: {description: 'FALSE', value: '0', key: ENABLE_SYS_PORTS}
+            attributes: {description: 'FALSE', value: '1', key: ENABLE_SYS_PORTS}
           - type: Pair
             attributes: {description: 'FALSE', value: '1', key: ENABLE_SYS_DMA}
           - type: Pair
@@ -172,6 +172,19 @@ children:
   - type: Boolean
     attributes: {id: ENABLE_SYS_INT}
     children:
+    - type: Values
+      children:
+      - type: Dynamic
+        attributes: {id: HarmonyCore, value: 'true'}
+  - type: Boolean
+    attributes: {id: ENABLE_SYS_MEDIA}
+    children:
+    - type: Attributes
+      children:
+      - type: Boolean
+        attributes: {id: readOnly}
+        children:
+        - {type: Value, value: 'true'}
     - type: Values
       children:
       - type: Dynamic
@@ -324,6 +337,15 @@ children:
         children:
         - {type: Value, value: 'true'}
   - type: File
+    attributes: {id: SYSTEM_MEDIA}
+    children:
+    - type: Attributes
+      children:
+      - type: Boolean
+        attributes: {id: enabled}
+        children:
+        - {type: Value, value: 'true'}
+  - type: File
     attributes: {id: SYSTEM_MODULE}
     children:
     - type: Attributes
@@ -405,4 +427,4 @@ children:
         children:
         - {type: Value, value: 'true'}
 - type: ElementPosition
-  attributes: {x: '190', y: '100', id: HarmonyCore}
+  attributes: {x: '20', y: '73', id: HarmonyCore}

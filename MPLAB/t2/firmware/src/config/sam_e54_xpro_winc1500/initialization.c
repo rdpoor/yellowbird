@@ -78,6 +78,78 @@
 // Section: Driver Initialization Data
 // *****************************************************************************
 // *****************************************************************************
+// <editor-fold defaultstate="collapsed" desc="DRV_SDSPI Instance 0 Initialization Data">
+
+/* SDSPI Client Objects Pool */
+static DRV_SDSPI_CLIENT_OBJ drvSDSPI0ClientObjPool[DRV_SDSPI_CLIENTS_NUMBER_IDX0];
+
+/* SDSPI Transfer Objects Pool */
+static DRV_SDSPI_BUFFER_OBJ drvSDSPI0TransferObjPool[DRV_SDSPI_QUEUE_SIZE_IDX0];
+
+/* SPI PLIB Interface Initialization for SDSPI Driver */
+const DRV_SDSPI_PLIB_INTERFACE drvSDSPI0PlibAPI = {
+
+    /* SPI PLIB WriteRead function */
+    .writeRead = (DRV_SDSPI_PLIB_WRITEREAD)SERCOM6_SPI_WriteRead,
+
+    /* SPI PLIB Write function */
+    .write = (DRV_SDSPI_PLIB_WRITE)SERCOM6_SPI_Write,
+
+    /* SPI PLIB Read function */
+    .read = (DRV_SDSPI_PLIB_READ)SERCOM6_SPI_Read,
+
+    /* SPI PLIB Transfer Status function */
+    .isTransmitterBusy = (DRV_SPI_PLIB_TRANSMITTER_IS_BUSY)SERCOM6_SPI_IsTransmitterBusy,
+
+    .transferSetup = (DRV_SDSPI_PLIB_SETUP)SERCOM6_SPI_TransferSetup,
+
+    /* SPI PLIB Callback Register */
+    .callbackRegister = (DRV_SDSPI_PLIB_CALLBACK_REGISTER)SERCOM6_SPI_CallbackRegister,
+};
+
+const uint32_t drvSDSPI0remapDataBits[]= { 0x0, 0x1, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
+const uint32_t drvSDSPI0remapClockPolarity[] = { 0x0, 0x20000000 };
+const uint32_t drvSDSPI0remapClockPhase[] = { 0x10000000, 0x0 };
+
+/* SDSPI Driver Initialization Data */
+const DRV_SDSPI_INIT drvSDSPI0InitData =
+{
+    /* SD Card SPI PLIB API interface*/
+    .spiPlib                = &drvSDSPI0PlibAPI,
+
+    .remapDataBits          = drvSDSPI0remapDataBits,
+
+    .remapClockPolarity     = drvSDSPI0remapClockPolarity,
+
+    .remapClockPhase        = drvSDSPI0remapClockPhase,
+
+
+    /* SDSPI Number of clients */
+    .numClients             = DRV_SDSPI_CLIENTS_NUMBER_IDX0,
+
+    /* SDSPI Client Objects Pool */
+    .clientObjPool          = (uintptr_t)&drvSDSPI0ClientObjPool[0],
+
+    /* SDSPI Transfer Objects Pool */
+    .bufferObjPool          = (uintptr_t)&drvSDSPI0TransferObjPool[0],
+
+    /* SDSPI Transfer Objects Queue Size */
+    .bufferObjPoolSize      = DRV_SDSPI_QUEUE_SIZE_IDX0,
+
+    .chipSelectPin          = DRV_SDSPI_CHIP_SELECT_PIN_IDX0,
+
+    .sdcardSpeedHz          = DRV_SDSPI_SPEED_HZ_IDX0,
+
+    .pollingIntervalMs      = DRV_SDSPI_POLLING_INTERVAL_MS_IDX0,
+
+    .writeProtectPin        = SYS_PORT_PIN_NONE,
+
+    .isFsEnabled            = true,
+
+};
+
+// </editor-fold>
+
 
 // <editor-fold defaultstate="collapsed" desc="DRV_SPI Instance 0 Initialization Data">
 
@@ -178,6 +250,65 @@ SYSTEM_OBJECTS sysObj;
 // Section: Library/Stack Initialization Data
 // *****************************************************************************
 // *****************************************************************************
+// <editor-fold defaultstate="collapsed" desc="File System Initialization Data">
+
+
+const SYS_FS_MEDIA_MOUNT_DATA sysfsMountTable[SYS_FS_VOLUME_NUMBER] =
+{
+    {NULL}
+};
+
+const SYS_FS_FUNCTIONS FatFsFunctions =
+{
+    .mount             = FATFS_mount,
+    .unmount           = FATFS_unmount,
+    .open              = FATFS_open,
+    .read              = FATFS_read,
+    .close             = FATFS_close,
+    .seek              = FATFS_lseek,
+    .fstat             = FATFS_stat,
+    .getlabel          = FATFS_getlabel,
+    .currWD            = FATFS_getcwd,
+    .getstrn           = FATFS_gets,
+    .openDir           = FATFS_opendir,
+    .readDir           = FATFS_readdir,
+    .closeDir          = FATFS_closedir,
+    .chdir             = FATFS_chdir,
+    .chdrive           = FATFS_chdrive,
+    .write             = FATFS_write,
+    .tell              = FATFS_tell,
+    .eof               = FATFS_eof,
+    .size              = FATFS_size,
+    .mkdir             = FATFS_mkdir,
+    .remove            = FATFS_unlink,
+    .setlabel          = FATFS_setlabel,
+    .truncate          = FATFS_truncate,
+    .chmode            = FATFS_chmod,
+    .chtime            = FATFS_utime,
+    .rename            = FATFS_rename,
+    .sync              = FATFS_sync,
+    .putchr            = FATFS_putc,
+    .putstrn           = FATFS_puts,
+    .formattedprint    = FATFS_printf,
+    .testerror         = FATFS_error,
+    .formatDisk        = (FORMAT_DISK)FATFS_mkfs,
+    .partitionDisk     = FATFS_fdisk,
+    .getCluster        = FATFS_getclusters
+};
+
+
+
+const SYS_FS_REGISTRATION_TABLE sysFSInit [ SYS_FS_MAX_FILE_SYSTEM_TYPE ] =
+{
+    {
+        .nativeFileSystemType = FAT,
+        .nativeFileSystemFunctions = &FatFsFunctions
+    },
+};
+
+
+// </editor-fold>
+
 
 
 // *****************************************************************************
@@ -185,15 +316,6 @@ SYSTEM_OBJECTS sysObj;
 // Section: System Initialization
 // *****************************************************************************
 // *****************************************************************************
-
-const SYS_DEBUG_INIT debugInit =
-{
-    .moduleInit = {0},
-    .errorLevel = SYS_DEBUG_GLOBAL_ERROR_LEVEL,
-    .consoleIndex = 0,
-};
-
-
 // <editor-fold defaultstate="collapsed" desc="SYS_TIME Initialization Data">
 
 const SYS_TIME_PLIB_INTERFACE sysTimePlibAPI = {
@@ -213,6 +335,15 @@ const SYS_TIME_INIT sysTimeInitData =
 };
 
 // </editor-fold>
+
+const SYS_DEBUG_INIT debugInit =
+{
+    .moduleInit = {0},
+    .errorLevel = SYS_DEBUG_GLOBAL_ERROR_LEVEL,
+    .consoleIndex = 0,
+};
+
+
 // <editor-fold defaultstate="collapsed" desc="SYS_CONSOLE Instance 0 Initialization Data">
 
 
@@ -283,6 +414,8 @@ void SYS_Initialize ( void* data )
 
     EVSYS_Initialize();
 
+    SERCOM6_SPI_Initialize();
+
     DMAC_Initialize();
 
     SERCOM4_SPI_Initialize();
@@ -293,18 +426,24 @@ void SYS_Initialize ( void* data )
 
 	BSP_Initialize();
 
+    /* Initialize SDSPI0 Driver Instance */
+    sysObj.drvSDSPI0 = DRV_SDSPI_Initialize(DRV_SDSPI_INDEX_0, (SYS_MODULE_INIT *)&drvSDSPI0InitData);
+
     /* Initialize the WINC Driver */
     sysObj.drvWifiWinc = WDRV_WINC_Initialize(0, NULL);
 
     /* Initialize SPI0 Driver Instance */
     sysObj.drvSPI0 = DRV_SPI_Initialize(DRV_SPI_INDEX_0, (SYS_MODULE_INIT *)&drvSPI0InitData);
 
+    sysObj.sysTime = SYS_TIME_Initialize(SYS_TIME_INDEX_0, (SYS_MODULE_INIT *)&sysTimeInitData);
     sysObj.sysDebug = SYS_DEBUG_Initialize(SYS_DEBUG_INDEX_0, (SYS_MODULE_INIT*)&debugInit);
 
 
-    sysObj.sysTime = SYS_TIME_Initialize(SYS_TIME_INDEX_0, (SYS_MODULE_INIT *)&sysTimeInitData);
     sysObj.sysConsole0 = SYS_CONSOLE_Initialize(SYS_CONSOLE_INDEX_0, (SYS_MODULE_INIT *)&sysConsole0Init);
 
+
+    /*** File System Service Initialization Code ***/
+    SYS_FS_Initialize( (const void *) sysFSInit );
 
 
     APP_Initialize();

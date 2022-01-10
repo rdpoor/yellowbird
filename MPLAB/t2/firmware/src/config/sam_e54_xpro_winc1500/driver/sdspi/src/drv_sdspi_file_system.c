@@ -1,18 +1,21 @@
-/*******************************************************************************
- System Interrupts File
+/******************************************************************************
+  SD Card (SPI) Driver File System Interface Implementation
 
   Company:
     Microchip Technology Inc.
 
   File Name:
-    interrupt.h
+    drv_sdspi_file_system.c
 
   Summary:
-    Interrupt vectors mapping
+    SD Card (SPI) Driver Interface Definition
 
   Description:
-    This file contains declarations of device vectors used by Harmony 3
- *******************************************************************************/
+    The SD Card Driver provides a interface to access the SD Card. This file
+    implements the SD Card Driver file system interface.
+    This file should be included in the project if SD Card driver functionality
+    with File system is needed.
+*******************************************************************************/
 
 // DOM-IGNORE-BEGIN
 /*******************************************************************************
@@ -39,37 +42,53 @@
  *******************************************************************************/
 // DOM-IGNORE-END
 
-#ifndef INTERRUPTS_H
-#define INTERRUPTS_H
-
 // *****************************************************************************
 // *****************************************************************************
-// Section: Included Files
-// *****************************************************************************
-// *****************************************************************************
-#include <stdint.h>
-
-
-
-// *****************************************************************************
-// *****************************************************************************
-// Section: Handler Routines
+// Section: Include Files
 // *****************************************************************************
 // *****************************************************************************
 
-void Reset_Handler (void);
-void NonMaskableInt_Handler (void);
-void HardFault_Handler (void);
-void EIC_EXTINT_7_InterruptHandler (void);
-void DMAC_0_InterruptHandler (void);
-void DMAC_1_InterruptHandler (void);
-void DMAC_2_InterruptHandler (void);
-void DMAC_3_InterruptHandler (void);
-void SERCOM2_USART_InterruptHandler (void);
-void SERCOM4_SPI_InterruptHandler (void);
-void SERCOM6_SPI_InterruptHandler (void);
-void TC3_TimerInterruptHandler (void);
+#include "driver/sdspi/drv_sdspi.h"
+#include "system/fs/sys_fs_media_manager.h"
 
+// *****************************************************************************
+// *****************************************************************************
+// Section: Global objects
+// *****************************************************************************
+// *****************************************************************************
 
+/* FS Function registration table. */
+typedef SYS_FS_MEDIA_COMMAND_STATUS (* CommandStatusGetType)( DRV_HANDLE, SYS_FS_MEDIA_BLOCK_COMMAND_HANDLE );    
 
-#endif // INTERRUPTS_H
+const SYS_FS_MEDIA_FUNCTIONS sdspiMediaFunctions =
+{
+    .mediaStatusGet     = DRV_SDSPI_IsAttached,
+    .mediaGeometryGet   = DRV_SDSPI_GeometryGet,
+    .sectorRead         = DRV_SDSPI_AsyncRead,
+    .sectorWrite        = DRV_SDSPI_AsyncWrite,
+    .eventHandlerset    = DRV_SDSPI_EventHandlerSet,
+    .commandStatusGet   = (CommandStatusGetType) DRV_SDSPI_CommandStatusGet,
+    .Read               = DRV_SDSPI_AsyncRead,
+    .erase              = NULL,
+    .addressGet         = NULL,
+    .open               = DRV_SDSPI_Open,
+    .close              = DRV_SDSPI_Close,
+    .tasks              = DRV_SDSPI_Tasks,
+};
+
+// *****************************************************************************
+// *****************************************************************************
+// Section: MEMORY Driver File system interface Routines
+// *****************************************************************************
+// *****************************************************************************
+
+void DRV_SDSPI_RegisterWithSysFs( const SYS_MODULE_INDEX drvIndex)
+{
+    SYS_FS_MEDIA_MANAGER_Register
+    (
+        (SYS_MODULE_OBJ)drvIndex,
+        (SYS_MODULE_INDEX)drvIndex,
+        &sdspiMediaFunctions,
+        (SYS_FS_MEDIA_TYPE)SYS_FS_MEDIA_TYPE_SD_CARD
+    );
+}
