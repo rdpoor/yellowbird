@@ -92,6 +92,36 @@ APP_DATA appData;
 // *****************************************************************************
 // *****************************************************************************
 
+static void APP_SysFSEventHandler(SYS_FS_EVENT event,void* eventData,uintptr_t context)
+{
+    switch(event)
+    {
+        /* If the event is mount then check if SDCARD media has been mounted */
+        case SYS_FS_EVENT_MOUNT:
+            if(strcmp((const char *)eventData, SD_MOUNT_NAME) == 0)
+            {
+                appData.sdCardMountFlag = true;
+            }
+            break;
+
+        /* If the event is unmount then check if SDCARD media has been unmount */
+        case SYS_FS_EVENT_UNMOUNT:
+            if(strcmp((const char *)eventData, SD_MOUNT_NAME) == 0)
+            {
+                appData.sdCardMountFlag = false;
+                appData.rwCounter = 0;
+
+                appData.state = APP_MOUNT_WAIT;
+            }
+
+            break;
+
+        case SYS_FS_EVENT_ERROR:
+        default:
+            break;
+    }
+}
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Local Functions
@@ -116,6 +146,10 @@ void APP_Initialize(void)
 {
     /* Place the App state machine in its initial state. */
     appData.state = APP_STATE_INIT;
+
+    /* Register the File System Event handler */
+    SYS_FS_EventHandlerSet((void const*)APP_SysFSEventHandler,(uintptr_t)NULL);
+
 }
 
 /******************************************************************************
@@ -133,6 +167,7 @@ void APP_Tasks(void)
     {
         case APP_STATE_INIT:
         {
+            appData.mount_retries = 0;
             /* Get handles to both the USB console instances */
             appData.consoleHandle = SYS_CONSOLE_HandleGet(SYS_CONSOLE_INDEX_0);
 
@@ -152,33 +187,30 @@ void APP_Tasks(void)
             {
                 SYS_DEBUG_MESSAGE(SYS_ERROR_INFO, "\nOpened WINC1500");
                 // APP_ExampleInitialize(wdrvHandle);
-                appData.mount_retries = MAX_MOUNT_RETRIES;
-                appData.state = APP_STATE_MOUNTING_FILESYSTEM;
+                appData.state = APP_MOUNT_WAIT;
             }
             break;
         }
 
-        case APP_STATE_MOUNTING_FILESYSTEM:
+        case APP_MOUNT_WAIT:
         {
-          IO1_LED_Toggle();   // debugging...
-          appData.mount_retries -= 1;
-          if (SYS_FS_Mount(SD_DEV_NAME, SD_MOUNT_NAME, FAT, 0, NULL) == 0) {
-              // successfully mounted the filesystem.
-              SYS_CONSOLE_PRINT("\nSD card mounted after %d attempts",
-                                MAX_MOUNT_RETRIES - appData.mount_retries);
-              appData.state = APP_STATE_WDRV_OPEN;
-          } else if (appData.mount_retries == 0) {
-            SYS_CONSOLE_PRINT("\nFailed to mount SD card after %d attempts",
-                              MAX_MOUNT_RETRIES);
-            appData.state = APP_STATE_ERROR;
-          } else {
-            // filesystem not yet mounted -- stay in this state
-          }
-        } break;
+            /* Wait for SDCARD to be Auto Mounted */
+            appData.mount_retries += 1;
+            IO1_LED_Toggle();   // debugging...
+            if(appData.sdCardMountFlag == true)
+            {
+                SYS_CONSOLE_PRINT("\nSD card mounted after %d attempts",
+                                  appData.mount_retries);
+                appData.state = APP_STATE_WDRV_OPEN;
+            } else {
+                // remain in this state
+            }
+            break;
+        }
 
         case APP_STATE_WDRV_OPEN:
         {
-            APP_ExampleTasks(wdrvHandle);
+            // APP_ExampleTasks(wdrvHandle);
             break;
         }
 

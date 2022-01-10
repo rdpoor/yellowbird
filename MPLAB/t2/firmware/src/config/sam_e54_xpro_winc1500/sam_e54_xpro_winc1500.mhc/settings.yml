@@ -5,7 +5,7 @@ frameworkPath: ../../..
 processor: ATSAME54P20A
 projectName: ''
 settings:
-  PackageFilter: crypto;core_apps_sam_d21_da1;dev_packs;net;csp_apps_sam_d5x_e5x;core;csp_apps_sam_d21_da1;bsp;quick_docs;reference_apps;usb;cryptoauthlib;wireless_wifi;csp;wireless_apps_winc3400;wireless_apps_winc1500
+  PackageFilter: crypto;core_apps_sam_d21_da1;dev_packs;net;csp_apps_sam_d5x_e5x;core;core_apps_sam_d5x_e5x;csp_apps_sam_d21_da1;bsp;quick_docs;reference_apps;usb;cryptoauthlib;wireless_wifi;csp;wireless_apps_winc3400;wireless_apps_winc1500
   FORCE_OPTIMIZATION: 'false'
   GENERATE_BACKUP: 'true'
   CMSISPath: ./dev_packs/arm/CMSIS/5.8.0

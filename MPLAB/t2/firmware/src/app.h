@@ -85,7 +85,7 @@ typedef enum
     /* Application's state machine's initial state. */
     APP_STATE_INIT=0,
     APP_STATE_WDRV_INIT_READY,
-    APP_STATE_MOUNTING_FILESYSTEM,
+    APP_MOUNT_WAIT,
     APP_STATE_WDRV_OPEN,
     APP_STATE_ERROR
 } APP_STATES;
@@ -107,7 +107,9 @@ typedef struct
 {
     APP_STATES state;
     SYS_CONSOLE_HANDLE consoleHandle;
+    volatile bool      sdCardMountFlag;
     uint8_t mount_retries;
+    uint32_t rwCounter;  // read-write counter, not yet used
 } APP_DATA;
 
 // *****************************************************************************
