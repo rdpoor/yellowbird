@@ -53,6 +53,11 @@
 #include "app.h"
 #include "wdrv_winc_client_api.h"
 
+#define SD_MOUNT_NAME "/mnt/mydrive"
+#define SD_DEV_NAME "/dev/mmcblka1"
+#define SD_IMAGE_NAME "winc.img"
+#define MAX_MOUNT_RETRIES 255
+
 void APP_ExampleInitialize(DRV_HANDLE handle);
 void APP_ExampleTasks(DRV_HANDLE handle);
 
@@ -145,11 +150,31 @@ void APP_Tasks(void)
 
             if (DRV_HANDLE_INVALID != wdrvHandle)
             {
-                APP_ExampleInitialize(wdrvHandle);
-                appData.state = APP_STATE_WDRV_OPEN;
+                SYS_DEBUG_MESSAGE(SYS_ERROR_INFO, "\nOpened WINC1500");
+                // APP_ExampleInitialize(wdrvHandle);
+                appData.mount_retries = MAX_MOUNT_RETRIES;
+                appData.state = APP_STATE_MOUNTING_FILESYSTEM;
             }
             break;
         }
+
+        case APP_STATE_MOUNTING_FILESYSTEM:
+        {
+          IO1_LED_Toggle();   // debugging...
+          appData.mount_retries -= 1;
+          if (SYS_FS_Mount(SD_DEV_NAME, SD_MOUNT_NAME, FAT, 0, NULL) == 0) {
+              // successfully mounted the filesystem.
+              SYS_CONSOLE_PRINT("\nSD card mounted after %d attempts",
+                                MAX_MOUNT_RETRIES - appData.mount_retries);
+              appData.state = APP_STATE_WDRV_OPEN;
+          } else if (appData.mount_retries == 0) {
+            SYS_CONSOLE_PRINT("\nFailed to mount SD card after %d attempts",
+                              MAX_MOUNT_RETRIES);
+            appData.state = APP_STATE_ERROR;
+          } else {
+            // filesystem not yet mounted -- stay in this state
+          }
+        } break;
 
         case APP_STATE_WDRV_OPEN:
         {
@@ -157,6 +182,7 @@ void APP_Tasks(void)
             break;
         }
 
+        case APP_STATE_ERROR:
         default:
         {
             /* TODO: Handle error in application's state machine. */

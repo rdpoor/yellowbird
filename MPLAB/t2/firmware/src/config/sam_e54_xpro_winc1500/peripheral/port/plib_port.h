@@ -74,6 +74,15 @@
 #define WDRV_WINC_RESETN_Get()               (((PORT_REGS->GROUP[0].PORT_IN >> 6U)) & 0x01U)
 #define WDRV_WINC_RESETN_PIN                  PORT_PIN_PA06
 
+/*** Macros for IO1_LED pin ***/
+#define IO1_LED_Set()               (PORT_REGS->GROUP[1].PORT_OUTSET = ((uint32_t)1U << 14U))
+#define IO1_LED_Clear()             (PORT_REGS->GROUP[1].PORT_OUTCLR = ((uint32_t)1U << 14U))
+#define IO1_LED_Toggle()            (PORT_REGS->GROUP[1].PORT_OUTTGL = ((uint32_t)1U << 14U))
+#define IO1_LED_OutputEnable()      (PORT_REGS->GROUP[1].PORT_DIRSET = ((uint32_t)1U << 14U))
+#define IO1_LED_InputEnable()       (PORT_REGS->GROUP[1].PORT_DIRCLR = ((uint32_t)1U << 14U))
+#define IO1_LED_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 14U)) & 0x01U)
+#define IO1_LED_PIN                  PORT_PIN_PB14
+
 /*** Macros for WDRV_WINC_CHIP_EN pin ***/
 #define WDRV_WINC_CHIP_EN_Set()               (PORT_REGS->GROUP[0].PORT_OUTSET = ((uint32_t)1U << 27U))
 #define WDRV_WINC_CHIP_EN_Clear()             (PORT_REGS->GROUP[0].PORT_OUTCLR = ((uint32_t)1U << 27U))

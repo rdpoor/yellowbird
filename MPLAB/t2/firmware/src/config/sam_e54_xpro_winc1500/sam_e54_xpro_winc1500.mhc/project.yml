@@ -152,7 +152,7 @@ files:
   physicalPath: driver/winc/drv/driver
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 7A57A09EF9EDB4FBA6074CBC90CCE8F6
+  userChecksum: CB5C6957093943E1A47EDF166FA8D386
 - generatedChecksum: null
   logicalPath: ''
   name: main.c
@@ -244,13 +244,13 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: 903E0413B53BA9E8980C740E65F59966
-- generatedChecksum: A7E36B774C4D1EFE45AF1A5918AAC055
+- generatedChecksum: F310167565281C391AB0D7B2CAC699AC
   logicalPath: config/sam_e54_xpro_winc1500/peripheral/port
   name: plib_port.c
   physicalPath: peripheral/port
   security: NON_SECURE
   type: SOURCE
-  userChecksum: A7E36B774C4D1EFE45AF1A5918AAC055
+  userChecksum: F310167565281C391AB0D7B2CAC699AC
 - generatedChecksum: 84CF61AB19C08BE15EA26265D4BEFAA4
   logicalPath: config/sam_e54_xpro_winc1500/peripheral/sercom/usart
   name: plib_sercom2_usart.c
@@ -1308,13 +1308,13 @@ files:
   security: NON_SECURE
   type: HEADER
   userChecksum: 265847151EACC813B7C7825442C21A32
-- generatedChecksum: A2C429CC1CEEF2CFB8FDE4810EC3AF97
+- generatedChecksum: 7E26AE6AD1FF7932633C1455E70F5F57
   logicalPath: config/sam_e54_xpro_winc1500/peripheral/port
   name: plib_port.h
   physicalPath: peripheral/port
   security: NON_SECURE
   type: HEADER
-  userChecksum: A2C429CC1CEEF2CFB8FDE4810EC3AF97
+  userChecksum: 7E26AE6AD1FF7932633C1455E70F5F57
 - generatedChecksum: 5918A5D1BACBE04FC667A4255E7CC97C
   logicalPath: config/sam_e54_xpro_winc1500/peripheral/sercom/usart
   name: plib_sercom2_usart.h

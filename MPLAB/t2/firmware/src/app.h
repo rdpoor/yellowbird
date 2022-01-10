@@ -53,6 +53,7 @@
 
 #include "definitions.h"
 #include "configuration.h"
+#include <stdint.h>
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
@@ -84,7 +85,9 @@ typedef enum
     /* Application's state machine's initial state. */
     APP_STATE_INIT=0,
     APP_STATE_WDRV_INIT_READY,
+    APP_STATE_MOUNTING_FILESYSTEM,
     APP_STATE_WDRV_OPEN,
+    APP_STATE_ERROR
 } APP_STATES;
 
 // *****************************************************************************
@@ -102,11 +105,9 @@ typedef enum
 
 typedef struct
 {
-    /* The application's current state */
     APP_STATES state;
-
     SYS_CONSOLE_HANDLE consoleHandle;
-
+    uint8_t mount_retries;
 } APP_DATA;
 
 // *****************************************************************************
@@ -200,4 +201,3 @@ void APP_Tasks( void );
 /*******************************************************************************
  End of File
  */
-
