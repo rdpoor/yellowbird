@@ -17,7 +17,7 @@
             </sourceRootList>
             <confList>
                 <confElem>
-                    <name>sam_e54_xpro</name>
+                    <name>default</name>
                     <type>2</type>
                 </confElem>
             </confList>
