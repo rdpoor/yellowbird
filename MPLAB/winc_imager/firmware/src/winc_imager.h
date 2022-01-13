@@ -20,6 +20,7 @@ extern "C" {
 
 #define DEFINE_WINC_IMAGER_STATES                                              \
   DEFINE_WINC_IMAGER_STATE(WINC_IMAGER_STATE_INIT)                             \
+  DEFINE_WINC_IMAGER_STATE(WINC_PRINTING_VERSION)                              \
   DEFINE_WINC_IMAGER_STATE(WINC_IMAGER_STATE_OPENING_WINC)                     \
   DEFINE_WINC_IMAGER_STATE(WINC_IMAGER_STATE_MOUNTING_DRIVE)                   \
   DEFINE_WINC_IMAGER_STATE(WINC_IMAGER_STATE_SETTING_DRIVE)                    \

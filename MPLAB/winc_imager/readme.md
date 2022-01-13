@@ -27,72 +27,75 @@ connector.
 4. Open a terminal emulator such as PuTTY, Terraterm or CoolTerm.  Select the port for the SAME54 XPRO and set the baud rate to 115200.
 5. Launch MPLAB.X and open the WINC Imager project
 6. In MPLAB.X, select `Production => Make and Program Device Main Project`
-7. In the terminal emulator, you should see a startup message like this:
 
-```
-======
-WINC Imager v 1.0.0
-  Connect WINC1500 XPRO to SAME54 XPRO EXT1
-  Connect IO1 XPRO to SAME54 XPRO EXT2
-======
-```
+When you run the program (or press the reset button), WINC Imager will print
+out a header and version information about the WINC.
 
 From here, there are three possibilities:
 
 ### If there is no `winc.img` file on the SD card:
 
 If there is no file named `winc.img` on the SD card, WINC Imager will offer to create `winc.img` and copy the contents of the WINC flash into it.  You will see a message like this:
+
 ```
-Allocating system resources...
-Opened WINC1500
-SD card mounted after 64055 attempts
-Selected mounted drive
+======
+WINC Imager v 1.0.1
+  Connect WINC1500 XPRO to SAME54 XPRO EXT1
+  Connect IO1 XPRO to SAME54 XPRO EXT2
+======
+WINC1500 Info:
+  Chip ID: 1377184
+  Firmware Ver: 19.6.1 SVN Rev 16761
+  Firmware Built at May 23 2018 Time 14:39:16
+  Firmware Min Driver Ver: 19.3.0
 File image winc.img not found,
-Would you like to copy WINC image to winc.img [y or Y]?
-```
-
-If you type 'y', it will read the contents of the WINC flash memory and
-create `winc.img` on the SD card:
-
-```
-Would you like to copy WINC image to winc.img [y or Y]?
+Would you like to create and copy WINC image to winc.img [y or Y]? ................................................................................................................................
 Finished writing WINC image to winc.img
-winc_imager completed successfully.
+WINC Imager completed successfully.
 ```
 
 ### If `winc.img` matches the WINC1500 flash memory:
 
-If `winc.img` exists on the SD card, WINC Imager will compare its contents against the WINC1500 flash memory.  If they are identical,
-you will see a message like this:
+If `winc.img` exists on the SD card, WINC Imager will compare its contents against the WINC1500 flash memory.  If they are identical, you will see a message like this:
 
 ```
-Found valid winc.img file
-Comparing image file winc.img against WINC contents...
-Finished comparison
-winc_imager completed successfully.
+======
+WINC Imager v 1.0.1
+  Connect WINC1500 XPRO to SAME54 XPRO EXT1
+  Connect IO1 XPRO to SAME54 XPRO EXT2
+======
+WINC1500 Info:
+  Chip ID: 1377184
+  Firmware Ver: 19.5.4 SVN Rev 15567
+  Firmware Built at Oct  4 2017 Time 14:59:09
+  Firmware Min Driver Ver: 19.3.0
+  Mismatch Firmware Version
+Comparing image file winc.img against WINC contents ................................................................................................................................finished comparison
+WINC Imager completed successfully.
 ```
 
 ### If `winc.img` differs from the WINC1500 flash memory:
 
 If `winc.img` exists on the SD card, WINC Imager will compare its contents against the WINC1500 flash memory.  If they differ,
-WINC Imager gives you the option of updating the WINC flash:
+WINC Imager gives you the option of updating the WINC flash in an interaction as follows.  Note that each '!' indicates
+a sector that differed and was over-written while each '.' indicates a identical sector that was not over-written:
 
 ```
-Found valid winc.img file
-Comparing image file winc.img against WINC contents...
-at winc[0x7097] = 0x49, file[0x7097] = 0x00
-WINC image and file image differ.  Update winc [y or Y]:
-```
-
-If you type 'y', the app will update the WINC1500 firmware to match the
-contents of `winc.img`, ending up like this:
-
-```
-WINC image and file image differ.  Update winc [y or Y]:
-Erased sector 7
-Wrote sector 7
-Finished comparison
-winc_imager completed successfully.
+======
+WINC Imager v 1.0.1
+  Connect WINC1500 XPRO to SAME54 XPRO EXT1
+  Connect IO1 XPRO to SAME54 XPRO EXT2
+======
+WINC1500 Info:
+  Chip ID: 1377184
+  Firmware Ver: 19.5.4 SVN Rev 15567
+  Firmware Built at Oct  4 2017 Time 14:59:09
+  Firmware Min Driver Ver: 19.3.0
+  Mismatch Firmware Version
+Comparing image file winc.img against WINC contents
+At 0x1af, winc = 0x4e, file = 0x4d
+WINC image and file image differ.  Update winc [y or Y]: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!...........................finished comparison
+WINC Imager completed successfully.
 ```
 
 ## Developer Notes

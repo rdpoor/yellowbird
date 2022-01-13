@@ -7,6 +7,7 @@
 
 #include "winc_imager.h"
 
+#include "m2m_hif.h"
 #include "spi_flash_map.h"
 #include "wdrv_winc_client_api.h"
 #include <stdbool.h>
@@ -49,6 +50,8 @@ static void flush_console_input(void);
  */
 static void get_y(winc_imager_state_t y_state, winc_imager_state_t n_state);
 
+static void print_winc_version(void);
+
 // *****************************************************************************
 // Private (static) storage
 
@@ -71,13 +74,18 @@ winc_imager_state_t winc_imager_step(void) {
 
   case WINC_IMAGER_STATE_INIT: {
     s_winc_imager_ctx.mount_retries = 0;
-    set_state(WINC_IMAGER_STATE_OPENING_WINC);
+    set_state(WINC_PRINTING_VERSION);
   } break;
+
+  case WINC_PRINTING_VERSION: {
+    print_winc_version();
+    set_state(WINC_IMAGER_STATE_OPENING_WINC);
+  }
 
   case WINC_IMAGER_STATE_OPENING_WINC: {
     s_winc_imager_ctx.winc_handle = WDRV_WINC_Open(0, DRV_IO_INTENT_EXCLUSIVE);
     if (s_winc_imager_ctx.winc_handle != DRV_HANDLE_INVALID) {
-      SYS_DEBUG_MESSAGE(SYS_ERROR_INFO, "\nOpened WINC1500");
+      SYS_DEBUG_MESSAGE(SYS_ERROR_DEBUG, "\nOpened WINC1500");
       set_state(WINC_IMAGER_STATE_MOUNTING_DRIVE);
     } else {
       SYS_DEBUG_MESSAGE(SYS_ERROR_ERROR, "\nUnable to open WINC1500");
@@ -89,7 +97,7 @@ winc_imager_state_t winc_imager_step(void) {
     s_winc_imager_ctx.mount_retries += 1;
     if (SYS_FS_Mount(SD_DEVICE_NAME, SD_MOUNT_NAME, FAT, 0, NULL) ==
         SYS_FS_RES_SUCCESS) {
-      SYS_DEBUG_PRINT(SYS_ERROR_INFO,
+      SYS_DEBUG_PRINT(SYS_ERROR_DEBUG,
                       "\nSD card mounted after %ld attempts",
                       s_winc_imager_ctx.mount_retries);
       set_state(WINC_IMAGER_STATE_SETTING_DRIVE);
@@ -108,7 +116,7 @@ winc_imager_state_t winc_imager_step(void) {
                       SYS_FS_Error());
       set_state(WINC_IMAGER_STATE_ERROR);
     } else {
-      SYS_DEBUG_MESSAGE(SYS_ERROR_INFO, "\nSelected mounted drive");
+      SYS_DEBUG_MESSAGE(SYS_ERROR_DEBUG, "\nSelected mounted drive");
       set_state(WINC_IMAGER_STATE_CHECKING_FILE_INFO);
     }
   } break;
@@ -123,7 +131,7 @@ winc_imager_state_t winc_imager_step(void) {
       // fstat() completed normally.  Make sure image file is correct size.
       if (stat_buf.fsize == WINC_IMAGE_SIZE) {
         SYS_DEBUG_PRINT(
-            SYS_ERROR_INFO, "\nFound valid %s file", FILE_IMAGE_NAME);
+            SYS_ERROR_DEBUG, "\nFound valid %s file", FILE_IMAGE_NAME);
         set_state(WINC_IMAGER_STATE_OPENING_IMAGE_FILE);
       } else {
         SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
@@ -140,7 +148,7 @@ winc_imager_state_t winc_imager_step(void) {
         // file doesn't exist -- plan b...
         SYS_CONSOLE_PRINT(
             "\nFile image %s not found,"
-            "\nWould you like to copy WINC image to %s [y or Y]? ",
+            "\nWould you like to create and copy WINC image to %s [y or Y]? ",
             FILE_IMAGE_NAME,
             FILE_IMAGE_NAME);
         flush_console_input();
@@ -157,9 +165,8 @@ winc_imager_state_t winc_imager_step(void) {
     s_winc_imager_ctx.file_handle =
         SYS_FS_FileOpen(FILE_IMAGE_NAME, SYS_FS_FILE_OPEN_READ);
     if (s_winc_imager_ctx.file_handle != SYS_FS_HANDLE_INVALID) {
-      SYS_DEBUG_PRINT(SYS_ERROR_INFO,
-                      "\nComparing image file %s against WINC contents...",
-                      FILE_IMAGE_NAME);
+      SYS_CONSOLE_PRINT("\nComparing image file %s against WINC contents ",
+                        FILE_IMAGE_NAME);
       s_winc_imager_ctx.has_winc_write_permission = false;
       s_winc_imager_ctx.sector = 0;
       set_state(WINC_IMAGER_STATE_COMPARING_SECTORS);
@@ -172,7 +179,7 @@ winc_imager_state_t winc_imager_step(void) {
 
   case WINC_IMAGER_STATE_COMPARING_SECTORS: {
     if (s_winc_imager_ctx.sector == WINC_SECTOR_COUNT) {
-      SYS_DEBUG_PRINT(SYS_ERROR_INFO, "\nFinished comparison", FILE_IMAGE_NAME);
+      SYS_CONSOLE_PRINT("finished comparison", FILE_IMAGE_NAME);
       set_state(WINC_IMAGER_STATE_SUCCESS);
     } else {
       SYS_DEBUG_PRINT(SYS_ERROR_DEBUG,
@@ -222,21 +229,24 @@ winc_imager_state_t winc_imager_step(void) {
     for (int i = 0; i < FLASH_SECTOR_SZ; i++) {
       if (s_winc_buffer[i] != s_file_buffer[i]) {
         uint32_t base = SECTOR_TO_OFFSET(s_winc_imager_ctx.sector);
-        SYS_CONSOLE_PRINT("\nat winc[0x%lx] = 0x%02x, file[0x%lx] = 0x%02",
-                          base + i,
-                          s_winc_buffer[i],
-                          base + i,
-                          s_file_buffer[i]);
+        // Inhibit print if user has granted WINC write permission.
+        if (!s_winc_imager_ctx.has_winc_write_permission) {
+          SYS_CONSOLE_PRINT("\nAt 0x%lx, winc = 0x%02x, file = 0x%02x",
+                            base + i,
+                            s_winc_buffer[i],
+                            s_file_buffer[i]);
+        }
         buffers_differ = true;
         break;
       }
     }
     if (!buffers_differ) {
       // buffers match - advance to next sector
+      SYS_CONSOLE_MESSAGE(".");
       set_state(WINC_IMAGER_STATE_INCREMENT_WRITE_SECTOR);
 
     } else if (!s_winc_imager_ctx.has_winc_write_permission) {
-      // buffers differ, but write permisson not yet granted.
+      // buffers differ, but write permission not yet granted.
       SYS_CONSOLE_PRINT(
           "\nWINC image and file image differ.  Update winc [y or Y]: ");
       flush_console_input();
@@ -252,13 +262,16 @@ winc_imager_state_t winc_imager_step(void) {
   } break;
 
   case WINC_IMAGER_STATE_ERASING_WINC_SECTOR: {
+    // Record the fact that the user has granted write permission
+    s_winc_imager_ctx.has_winc_write_permission = true;
+    SYS_CONSOLE_MESSAGE("!");
     // image file sector is already in s_sector_buf.  Write to WINC.
     if (WDRV_WINC_NVMEraseSector(s_winc_imager_ctx.winc_handle,
                                  WDRV_WINC_NVM_REGION_RAW,
                                  s_winc_imager_ctx.sector,
                                  1) == WDRV_WINC_STATUS_OK) {
       SYS_DEBUG_PRINT(
-          SYS_ERROR_INFO, "\nErased sector %d", s_winc_imager_ctx.sector);
+          SYS_ERROR_DEBUG, "\nErased sector %d", s_winc_imager_ctx.sector);
       set_state(WINC_IMAGER_STATE_WRITING_WINC_SECTOR);
     } else {
       SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
@@ -276,7 +289,7 @@ winc_imager_state_t winc_imager_step(void) {
                            SECTOR_TO_OFFSET(s_winc_imager_ctx.sector),
                            FLASH_SECTOR_SZ) == WDRV_WINC_STATUS_OK) {
       SYS_DEBUG_PRINT(
-          SYS_ERROR_INFO, "\nWrote sector %d", s_winc_imager_ctx.sector);
+          SYS_ERROR_DEBUG, "\nWrote sector %d", s_winc_imager_ctx.sector);
       set_state(WINC_IMAGER_STATE_INCREMENT_WRITE_SECTOR);
     } else {
       SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
@@ -356,6 +369,7 @@ winc_imager_state_t winc_imager_step(void) {
   } break;
 
   case WINC_IMAGER_STATE_INCREMENT_READ_SECTOR: {
+    SYS_CONSOLE_MESSAGE(".");
     s_winc_imager_ctx.sector += 1;
     set_state(WINC_IMAGER_STATE_READING_SECTORS);
   } break;
@@ -414,4 +428,40 @@ static void get_y(winc_imager_state_t y_state, winc_imager_state_t n_state) {
   } else {
     set_state(n_state);
   }
+}
+
+// wdrv_winc_common.h
+
+static void print_winc_version(void) {
+  // general violation of abstraction layers.  hopefully won't mess up too much.
+  int8_t ret = M2M_SUCCESS;                  // nm_common.h
+  uint8_t u8WifiMode = M2M_WIFI_MODE_NORMAL; // m2m_types.h
+  tstrM2mRev strtmp;                         // nmdrv.h
+
+  ret = nm_drv_init_start(&u8WifiMode); // nmdrv.h
+  if (ret == M2M_SUCCESS) {
+    ret = hif_init(NULL); // m2m_hif.h
+    if (ret == M2M_SUCCESS) {
+      ret = nm_get_firmware_full_info(&strtmp); // nmdrv.h
+      SYS_CONSOLE_PRINT("\nWINC1500 Info:");
+      SYS_CONSOLE_PRINT("\n  Chip ID: %ld", strtmp.u32Chipid);
+      SYS_CONSOLE_PRINT("\n  Firmware Ver: %u.%u.%u SVN Rev %u",
+                        strtmp.u8FirmwareMajor,
+                        strtmp.u8FirmwareMinor,
+                        strtmp.u8FirmwarePatch,
+                        strtmp.u16FirmwareSvnNum);
+      SYS_CONSOLE_PRINT("\n  Firmware Built at %s Time %s",
+                        strtmp.BuildDate,
+                        strtmp.BuildTime);
+      SYS_CONSOLE_PRINT("\n  Firmware Min Driver Ver: %u.%u.%u",
+                        strtmp.u8DriverMajor,
+                        strtmp.u8DriverMinor,
+                        strtmp.u8DriverPatch);
+      if (M2M_ERR_FW_VER_MISMATCH == ret) {
+        SYS_CONSOLE_PRINT("\n  Mismatch Firmware Version");
+      }
+    }
+    hif_deinit(NULL); // nmdrv.h
+  }
+  nm_drv_deinit(NULL); // nmdrv.h
 }

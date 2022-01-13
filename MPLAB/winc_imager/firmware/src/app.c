@@ -16,7 +16,7 @@
 // *****************************************************************************
 // Private types and definitions
 
-#define WINC_IMAGER_VERSION "1.0.0"
+#define WINC_IMAGER_VERSION "1.0.1"
 #define IO1_LED_ON() IO1_LED_Clear()
 #define IO1_LED_OFF() IO1_LED_Set()
 #define IO1_LED_TOGGLE() IO1_LED_Toggle()
@@ -65,7 +65,7 @@ void APP_Tasks(void) {
                       "\n======",
                       WINC_IMAGER_VERSION);
     SYS_DEBUG_ErrorLevelSet(SYS_ERROR_INFO);
-    SYS_DEBUG_MESSAGE(SYS_ERROR_INFO, "\nAllocating system resources...");
+    SYS_DEBUG_MESSAGE(SYS_ERROR_DEBUG, "\nAllocating system resources...");
     s_app_ctx.state = APP_STATE_RUNNING_IMAGER;
   } break;
 
@@ -74,10 +74,10 @@ void APP_Tasks(void) {
     winc_imager_state_t wi_state = winc_imager_step();
 
     if (wi_state == WINC_IMAGER_STATE_SUCCESS) {
-      SYS_CONSOLE_PRINT("\nwinc_imager completed successfully.");
+      SYS_CONSOLE_PRINT("\nWINC Imager completed successfully.");
       set_state(APP_STATE_SUCCESS);
     } else if (wi_state == WINC_IMAGER_STATE_ERROR) {
-      SYS_CONSOLE_PRINT("\nwinc_imager terminated with an error.");
+      SYS_CONSOLE_PRINT("\nWINC Imager terminated with an error.");
       set_state(APP_STATE_ERROR);
     } else {
       // remain in this state.
