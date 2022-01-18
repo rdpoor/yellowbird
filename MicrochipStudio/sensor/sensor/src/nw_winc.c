@@ -57,6 +57,7 @@
 #define NW_WINC_WIFI_CONNECTION_BIT           BIT0
 #define NW_WINC_WIFI_DISCONNECTION_BIT        BIT1
 #define NW_WINC_WIFI_SYS_TIME_BIT             BIT2
+#define NW_WINC_WIFI_CUR_RSSI_BIT             BIT3
 
 #define NW_WINC_SOCKET_DNS_BIT                  BIT0
 #define NW_WINC_SOCKET_CONNECTION_SUCCESS_BIT   BIT1
@@ -441,6 +442,24 @@ void NW_WINC_GetIpAddr(unsigned char* ip_addr)
 	strcpy((char*)ip_addr,(char*)pNwWifi->ip_addr);
 }
 
+
+signed char NW_WINC_GetRssi()
+{
+    TRACE_DBG("%s() Entry \n",__FUNCTION__);
+
+    m2m_wifi_req_curr_rssi();
+
+    xEventGroupClearBits(pNwWifi->wifi_event_group, NW_WINC_WIFI_CUR_RSSI_BIT);
+    /* wait for cur rssi  */
+    xEventGroupWaitBits(pNwWifi->wifi_event_group,
+                        NW_WINC_WIFI_CUR_RSSI_BIT,
+                        pdFALSE,
+                        pdFALSE,
+                        portMAX_DELAY);
+	TRACE_DBG("%s() Exit \n",__FUNCTION__);
+    return pNwWifi->cur_rssi;
+}
+
 // =============================================================================
 // Private (static) code
 
@@ -531,6 +550,12 @@ static void nw_winc_wifi_cb(uint8_t u8MsgType, void *pvMsg)
 			xEventGroupSetBits(pNwWifi->wifi_event_group, NW_WINC_WIFI_SYS_TIME_BIT);
         }  
         break;
+
+        case M2M_WIFI_RESP_CURRENT_RSSI :
+            pNwWifi->cur_rssi = *((signed char*)pvMsg);
+            TRACE_DBG("pNwWifi->cur_rssi = %d \n",pNwWifi->cur_rssi);
+            xEventGroupSetBits(pNwWifi->wifi_event_group, NW_WINC_WIFI_CUR_RSSI_BIT);
+        break; 
 
         default:
             break;
