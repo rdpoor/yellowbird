@@ -85,7 +85,8 @@ typedef struct NW_WINC
     osa_thread_handle h_wifi_thread; 
 
     NW_WINC_socket_t  Sockets[NW_WINC_MAX_SOCKETS];
-    unsigned char sys_time[40];  
+    unsigned char sys_time[40]; 
+    signed char cur_rssi; 
 
 } NW_WINC;
 
@@ -117,6 +118,8 @@ void NW_WINC_GetSysTime(unsigned char* time);
 void NW_WINC_GetMacAddr(unsigned char* mac_addr);
 
 void NW_WINC_GetIpAddr(unsigned char* ip_addr);
+
+signed char NW_WINC_GetRssi();
 
 #ifdef __cplusplus
 }
