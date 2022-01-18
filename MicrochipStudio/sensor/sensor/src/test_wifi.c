@@ -327,7 +327,7 @@ int SENSOR_GetData(unsigned char* buf, int size)
     rsp +=sprintf((char *)rsp,",\"samples\":[{");
 
     rsp +=sprintf((char *)rsp,"\"index\":0");
-    rsp +=sprintf((char *)rsp,",\"time\":%d",RTC_GetTimeStamp());
+    rsp +=sprintf((char *)rsp,",\"time\":%d",RTC_GetTimeStamp()*1000);
 
     rsp +=sprintf((char *)rsp,",\"sensors\":[");
 
@@ -360,11 +360,10 @@ int SENSOR_GetData(unsigned char* buf, int size)
     rsp +=sprintf((char *)rsp,",\"sn.bssid\":\"%s\"","78:24:af:7c:c6:d0");  //TBD
 
     rsp +=sprintf((char *)rsp,",\"wifi_channel\":11");                //TBD
-    rsp +=sprintf((char *)rsp,",\"sn.vbat\":7.065");  //TBD
-    rsp +=sprintf((char *)rsp,",\"wifi_channel\":11");                //TBD
-    rsp +=sprintf((char *)rsp,",\"sn.vbat\":7.065");                 //TBD
+    rsp +=sprintf((char *)rsp,",\"sn.vbat\":7.065");                  //TBD
 
-    rsp +=sprintf((char *)rsp,",\"wifi.rssi\":-51");                //TBD
+
+    rsp +=sprintf((char *)rsp,",\"wifi.rssi\":%d",NW_WINC_GetRssi());                //TBD
     rsp +=sprintf((char *)rsp,",\"sn.rssi\":51");                 //TBD
 
     rsp +=sprintf((char *)rsp,",\"wifi.dhcp\":0");                //TBD
