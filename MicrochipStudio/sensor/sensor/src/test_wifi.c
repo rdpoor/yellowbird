@@ -313,7 +313,7 @@ int SENSOR_GetData(unsigned char* buf, int size)
 			                                                           mac_addr[3],
 			                                                           mac_addr[4],
 			                                                           mac_addr[5]);
-    rsp +=sprintf((char *)rsp,",\"timestamp\":%d",RTC_GetTimeStamp());
+    rsp +=sprintf((char *)rsp,",\"timestamp\":%d000",RTC_GetTimeStamp());
 
     rsp +=sprintf((char *)rsp,",\"attributes\":{\"model\":\"TRAXX Device de Oro\"");
     rsp +=sprintf((char *)rsp,",\"hwId\":2");
@@ -327,7 +327,7 @@ int SENSOR_GetData(unsigned char* buf, int size)
     rsp +=sprintf((char *)rsp,",\"samples\":[{");
 
     rsp +=sprintf((char *)rsp,"\"index\":0");
-    rsp +=sprintf((char *)rsp,",\"time\":%d",RTC_GetTimeStamp()*1000);
+    rsp +=sprintf((char *)rsp,",\"time\":%d000",RTC_GetTimeStamp());
 
     rsp +=sprintf((char *)rsp,",\"sensors\":[");
 
@@ -344,7 +344,7 @@ int SENSOR_GetData(unsigned char* buf, int size)
 
 
     rsp +=sprintf((char *)rsp,",\"metrics\":[{");
-    rsp +=sprintf((char *)rsp,"\"timestamp\":%d",RTC_GetTimeStamp());
+    rsp +=sprintf((char *)rsp,"\"timestamp\":%d000",RTC_GetTimeStamp());
     rsp +=sprintf((char *)rsp,",\"metrics\":{");
     rsp +=sprintf((char *)rsp,"\"wifi.error1\":5");
 
