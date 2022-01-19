@@ -300,7 +300,7 @@ int SENSOR_GetData(unsigned char* buf, int size)
 
     rsp +=sprintf((char *)rsp,"TkZCVE02R1Y3QVVFMlNSREtNSjNENllVSUk6S1g0VFhRSlBFSEZDWUVBRDJGR0dTMlFGVUc2R1hHNlFHQzdQQ0ZZ\r\n"); 
  
-    rsp +=sprintf((char *)rsp,"Content-Length: %d\r\n",887);
+    rsp +=sprintf((char *)rsp,"Content-Length: %d\r\n",981);
 
     rsp +=sprintf((char *)rsp,"\r\n");
  
@@ -346,9 +346,12 @@ int SENSOR_GetData(unsigned char* buf, int size)
     rsp +=sprintf((char *)rsp,",\"metrics\":[{");
     rsp +=sprintf((char *)rsp,"\"timestamp\":%d000",RTC_GetTimeStamp());
     rsp +=sprintf((char *)rsp,",\"metrics\":{");
-    rsp +=sprintf((char *)rsp,"\"wifi.error1\":5");
+    rsp +=sprintf((char *)rsp,"\"AP.retries\":0");        //TBD
+    rsp +=sprintf((char *)rsp,",\"Server.retries\":0");    //TBD
 
-    rsp +=sprintf((char *)rsp,",\"wifi.err1RadioTime\":33622");
+    rsp +=sprintf((char *)rsp,",\"wifi.error1\":0");
+
+    rsp +=sprintf((char *)rsp,",\"wifi.err1RadioTime\":0");
     rsp +=sprintf((char *)rsp,",\"wifi.error2\":0");
     rsp +=sprintf((char *)rsp,",\"wifi.err2RadioTime\":0");
     rsp +=sprintf((char *)rsp,",\"wifi.error3\":0");
@@ -357,28 +360,42 @@ int SENSOR_GetData(unsigned char* buf, int size)
     rsp +=sprintf((char *)rsp,",\"wifi.err4RadioTime\":0");
 
     rsp +=sprintf((char *)rsp,",\"wifi.bssid\":\"%s\"","78:24:af:7c:c6:d0"); //TBD
-    rsp +=sprintf((char *)rsp,",\"sn.bssid\":\"%s\"","78:24:af:7c:c6:d0");  //TBD
+  //  rsp +=sprintf((char *)rsp,",\"sn.bssid\":\"%s\"","78:24:af:7c:c6:d0");  //TBD
 
-    rsp +=sprintf((char *)rsp,",\"wifi_channel\":11");                //TBD
-    rsp +=sprintf((char *)rsp,",\"sn.vbat\":7.065");                  //TBD
-
+    rsp +=sprintf((char *)rsp,",\"wifi_channel\":3");                //TBD
+  //  rsp +=sprintf((char *)rsp,",\"sn.vbat\":7.065");                  //TBD
+    rsp +=sprintf((char *)rsp,",\"sn.vbat\":-1");                  //TBD
 
     rsp +=sprintf((char *)rsp,",\"wifi.rssi\":%d",NW_WINC_GetRssi());                //TBD
-    rsp +=sprintf((char *)rsp,",\"sn.rssi\":51");                 //TBD
+  //  rsp +=sprintf((char *)rsp,",\"sn.rssi\":51");                 //TBD
 
-    rsp +=sprintf((char *)rsp,",\"wifi.dhcp\":0");                //TBD
-    rsp +=sprintf((char *)rsp,",\"wifi.setup\":0");                 //TBD
+    rsp +=sprintf((char *)rsp,",\"wifi.dhcp\":616");                //TBD
+    rsp +=sprintf((char *)rsp,",\"wifi.setup\":1038");                 //TBD
 
 
-    rsp +=sprintf((char *)rsp,",\"wifi.radio\":0");                //TBD
-    rsp +=sprintf((char *)rsp,",\"wifi.remain\":0");                 //TBD
+    rsp +=sprintf((char *)rsp,",\"wifi.radio\":2516");                //TBD
+    rsp +=sprintf((char *)rsp,",\"wifi.remain\":448");                 //TBD
 
-    rsp +=sprintf((char *)rsp,",\"cloud.latency\":0");                //TBD
+    rsp +=sprintf((char *)rsp,",\"sys.faults\":0");                 //TBD
+
+    rsp +=sprintf((char *)rsp,",\"button.event\":0");                 //TBD
+
+    rsp +=sprintf((char *)rsp,",\"filesys.error\":0");                 //TBD
+
+    rsp +=sprintf((char *)rsp,",\"sensordata.unsent\":0");                 //TBD
+
+    rsp +=sprintf((char *)rsp,",\"cloud.latency\":414");                //TBD
     rsp +=sprintf((char *)rsp,",\"sensor.alarm\":0");                 //TBD
 
-
     rsp +=sprintf((char *)rsp,",\"power.source\":1");                //TBD
-    rsp +=sprintf((char *)rsp,",\"highpower.count\":0}}]}");                 //TBD
+    rsp +=sprintf((char *)rsp,",\"highpower.count\":0");                 //TBD
+
+    rsp +=sprintf((char *)rsp,",\"report.attempts\":0");                 //TBD
+    rsp +=sprintf((char *)rsp,",\"rtc.drift\":0");                 //TBD
+
+    rsp +=sprintf((char *)rsp,",\"power.glitches\":0}}]}");                 //TBD
+
+
 #endif
 
     TRACE_DBG("%s() Pkt Length = %d  content length = %d  \n", __FUNCTION__, rsp-buf, rsp-p);
