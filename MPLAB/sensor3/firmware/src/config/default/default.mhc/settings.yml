@@ -1,0 +1,14 @@
+configName: default
+folderName: sensor3
+format_version: v1.0
+frameworkPath: ..\..\..\..\..\..\Microchip\harmony
+processor: ATSAME54P20A
+projectName: sensor3
+settings:
+  PackageFilter: bsp;core;core_apps_sam_d5x_e5x;crypto;cryptoauthlib;csp;dev_packs;net;quick_docs;usb;wireless_apps_winc1500;wireless_wifi
+  FORCE_OPTIMIZATION: 'false'
+  GENERATE_BACKUP: 'true'
+  TRUSTZONE: 'false'
+  CMSISPath: .\dev_packs\arm\CMSIS\5.8.0
+  MERGE_STRATEGY: USER_ALL
+  DFPPath: .\dev_packs\Microchip\SAME54_DFP\3.6.95\atdf\ATSAME54P20A.atdf
