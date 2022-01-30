@@ -202,7 +202,7 @@ void NW_WINC_Term()
         TRACE_INFO("%s() DISCONNECTED   \n", __FUNCTION__);
    
     }
-    m2m_wifi_deinit(NULL);
+ //   m2m_wifi_deinit(NULL);
 //    nm_bsp_deinit();
 }
 
@@ -420,7 +420,7 @@ void NW_WINC_GetSysTime(unsigned char* time)
     }
 
     TRACE_INFO("Network UP = %p \n",pNwWifi->sys_time);
-    m2m_wifi_get_sytem_time();
+    m2m_wifi_get_system_time();
 
 	xEventGroupClearBits(pNwWifi->wifi_event_group, NW_WINC_WIFI_SYS_TIME_BIT);
 	/* wait for sys time */
