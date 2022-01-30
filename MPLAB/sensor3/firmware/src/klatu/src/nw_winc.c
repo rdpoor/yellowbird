@@ -514,12 +514,12 @@ static  void nw_winc_wifi_cb(uint8_t u8MsgType, void *pvMsg)
         { 
             tstrM2mWifiStateChanged *pstrWifiState = (tstrM2mWifiStateChanged *)pvMsg;           
             if (pstrWifiState->u8CurrState == M2M_WIFI_CONNECTED) {
-                puts("m2m_wifi_state: M2M_WIFI_RESP_CON_STATE_CHANGED: CONNECTED\n");
+                TRACE_DBG("m2m_wifi_state: M2M_WIFI_RESP_CON_STATE_CHANGED: CONNECTED\n");
                // m2m_wifi_get_connection_info();
                // m2m_wifi_request_dhcp_client();
             }
             else if (pstrWifiState->u8CurrState == M2M_WIFI_DISCONNECTED) {
-                puts("m2m_wifi_state: M2M_WIFI_RESP_CON_STATE_CHANGED: DISCONNECTED");
+                TRACE_DBG("m2m_wifi_state: M2M_WIFI_RESP_CON_STATE_CHANGED: DISCONNECTED");
                 m2m_wifi_connect((char*)pNwWifi->ssid, strlen((char*)pNwWifi->ssid), pNwWifi->wifi_security, pNwWifi->pass_phrase, M2M_WIFI_CH_ALL);
                 pNwWifi->is_network_up = FALSE;
                 xEventGroupSetBits(pNwWifi->wifi_event_group, NW_WINC_WIFI_DISCONNECTION_BIT);
