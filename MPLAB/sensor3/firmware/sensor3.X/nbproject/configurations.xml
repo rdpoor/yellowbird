@@ -561,6 +561,7 @@
       <itemPath>../src/klatu/src/trace.c</itemPath>
       <itemPath>../src/klatu/src/nw_winc.c</itemPath>
       <itemPath>../src/klatu/src/test_wifi.c</itemPath>
+      <itemPath>../src/klatu/src/klatu_rtc.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
