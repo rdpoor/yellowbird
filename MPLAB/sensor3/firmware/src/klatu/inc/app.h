@@ -36,7 +36,7 @@ extern "C" {
 #include <stdbool.h>
 
 #include "osa.h"
-//#include "rtc.h"
+#include "klatu_rtc.h"
 #include "nw_winc.h"
 
 // =============================================================================
@@ -63,7 +63,7 @@ typedef struct APP
 	osa_msgq_type_t app_thread_msg_q;
 	osa_timer_type_t h_timer;
     osa_mutex_type_t msg_q_mutex;
- //   RTC_T Rtc;
+    RTC_T Rtc;
     NW_WINC Nw;
     unsigned char ssid[32];
     unsigned char passphrase[100];
