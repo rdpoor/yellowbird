@@ -263,13 +263,6 @@ static void test_open_socket()
 	}
     TRACE_DBG("%s() Exit\n", __FUNCTION__);
 }
-unsigned int RTC_GetTimeStamp()
-{
-
-return 0;
-
-
-}
 int SENSOR_GetData(unsigned char* buf, int size)
 {
     unsigned char* rsp;
@@ -306,7 +299,7 @@ int SENSOR_GetData(unsigned char* buf, int size)
 
     rsp +=sprintf((char *)rsp,"TkZCVE02R1Y3QVVFMlNSREtNSjNENllVSUk6S1g0VFhRSlBFSEZDWUVBRDJGR0dTMlFGVUc2R1hHNlFHQzdQQ0ZZ\r\n"); 
  
-    rsp +=sprintf((char *)rsp,"Content-Length: %d\r\n",954);
+    rsp +=sprintf((char *)rsp,"Content-Length: %d\r\n",981);
 
     rsp +=sprintf((char *)rsp,"\r\n");
  
