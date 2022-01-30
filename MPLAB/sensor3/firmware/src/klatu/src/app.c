@@ -87,13 +87,51 @@ typedef enum APP_POWER_MODE
 
 
 #define CONF_PL_CONFIG
+
 #define CONF_DFLL_CONFIG hri_oscctrl_write_DFLLCTRLA_reg(OSCCTRL, 0)
+
+#if 0
 #define CONF_BOD_CONFIG hri_supc_clear_BOD33_ENABLE_bit(SUPC)
+#else
+#define SUPC_BOD33_ENABLE_Pos       1            /**< \brief (SUPC_BOD33) Enable */
+#define SUPC_BOD33_ENABLE           (_U_(0x1) << SUPC_BOD33_ENABLE_Pos)
+#define CONF_BOD_CONFIG  SUPC_REGS->SUPC_BOD33  &= ~SUPC_BOD33_ENABLE;
+#endif
+
+
 #define CONF_VREG_CONFIG
+#if 0
 #define CONF_NVM_CONFIG hri_nvmctrl_write_CTRLA_PRM_bf(NVMCTRL, 1)
+#else
+
+//#define NVMCTRL_CTRLA_PRM_Pos       6            /**< \brief (NVMCTRL_CTRLA) Power Reduction Mode during Sleep */
+//#define NVMCTRL_CTRLA_PRM_Msk       (_U_(0x3) << NVMCTRL_CTRLA_PRM_Pos)
+#define  CONF_NVM_CONFIG     \
+do {\
+	uint16_t tmp;  \
+	tmp = NVMCTRL_REGS->NVMCTRL_CTRLA;\
+	tmp &= ~NVMCTRL_CTRLA_PRM_Msk;\
+	tmp |= NVMCTRL_CTRLA_PRM(1);\
+	NVMCTRL_REGS->NVMCTRL_CTRLA = tmp;\
+}while(0)
+#endif
+
+#if 0
 #define CONF_PINS_CONFIG                                           \
 gpio_set_pin_direction(GPIO(2, 21), GPIO_DIRECTION_OUT);           \
 gpio_set_pin_level(GPIO(2, 21), false)
+#else 
+#define  CONF_PINS_CONFIG     \
+do {\
+	PORT_GroupOutputEnable(PORT_GROUP_2, 0x200000) ;\
+	PORT_GroupClear(PORT_GROUP_2, 0x200000);\
+}while(0)
+
+
+
+#endif
+
+
 #define SD_DEVICE_NAME "/dev/mmcblka1"
 #define SD_MOUNT_NAME "/mnt/mydrive"
 #define FILE_IMAGE_NAME "config.txt"
@@ -124,7 +162,7 @@ void APP_Start(void)
 	OSA_InitMsgQue(&App.app_thread_msg_q,(unsigned char*)"app_action_msg_q", APP_MSGQ_NO_OF_MESSAGES, sizeof(void *));
 		
     OSA_InitMutex(&App.msg_q_mutex);
-#if 0
+#if 1
     RTC_Init(&App.Rtc,RTC_CALENDER);
 #endif
 	NW_WINC_Init(&App.Nw);
@@ -153,75 +191,36 @@ static void app_thread_entry_func(void *arg)
     int socket_id;
     int size ;
     unsigned char datetime[30];
-
-#if 0
-	OSA_InitTimer(&App.h_timer, APP_TIMER_VALUE_SEC*1000, FALSE, app_timer_handler, NULL);
-
-    OSA_StartTimer(&App.h_timer);
-#endif
 	
 	TRACE_DBG("%s() Entry()\n",__FUNCTION__);
-#if 0
-	//if (hri_rstc_get_RCAUSE_POR_bit(RSTC))
-	{
-		/* It is power on Reset , need to set RTC time after SNTP synch */
-		TRACE_DBG("Power On Reset\n");
-		NW_WINC_GetSysTime(datetime);
-		TRACE_DBG("Current date time = %s\n",datetime);
-		RTC_SetDateTime(datetime);
-	}
-	/* Program RTC to wake up after 60 seconds */
-	RTC_SetAlaram(APP_HIBERNATE_TIME_SEC,app_callback, NULL);
-
-    size = SENSOR_GetData(App_sensor_data_buf, APP_SENSOSR_DATA_SIZE);
-
-    TRACE_DBG("Sensor Data(%d) :%.*s\n",size,size,(unsigned char*)App_sensor_data_buf);
-
-
-    //NW_WINC_OpenSocket(NW_WIFI_TCP_CLIENT,"192.168.1.135", NULL,5000,&socket_id);
-   // NW_WINC_OpenSocket(NW_WIFI_SSL_TCP_CLIENT,(unsigned char*)"192.168.1.135",NULL,443,&socket_id);
-   // NW_WINC_OpenSocket(NW_WIFI_SSL_TCP_CLIENT,NULL,(unsigned char*)"localveggy.com",5000,&socket_id);
-   // NW_WINC_OpenSocket(NW_WIFI_SSL_TCP_CLIENT,(unsigned char*)"52.163.206.207",NULL,5000,&socket_id);
-    //NW_WINC_SendSocket(socket_id,"Hello World", sizeof("Hello World"));
-    //NW_WINC_ReceiveSocket(socket_id,rx_buf, 10);
-    //TRACE_DBG( "Received Buffer = %s\n",rx_buf);
-
-    NW_WINC_OpenSocket(NW_WIFI_SSL_TCP_CLIENT,NULL,(unsigned char*)"api.traxxekg.com",443,&socket_id);
-    NW_WINC_SendSocket(socket_id,App_sensor_data_buf, size);
-	memset(App_sensor_data_buf,0x00,APP_SENSOSR_DATA_SIZE);
-    NW_WINC_ReceiveSocket(socket_id,App_sensor_data_buf, APP_SENSOSR_DATA_SIZE);
-    TRACE_DBG("Received Buffer = %s\n",App_sensor_data_buf);
-	NW_WINC_CloseSocket(socket_id);
- 	NW_WINC_Term();
-	app_do_hibernate();
-   
-#endif
-
-
-
 	app_read_config_file();
 	NW_WINC_connect(App.ssid,App.passphrase,M2M_WIFI_SEC_WPA_PSK);
-#if 1
+    //if (hri_rstc_get_RCAUSE_POR_bit(RSTC))
+    {
+        /* It is power on Reset , need to set RTC time after SNTP synch */
+        TRACE_DBG("Power On Reset\n");
+        NW_WINC_GetSysTime(datetime);
+        TRACE_DBG("Current date time = %s\n",datetime);
 
+        RTC_GetTimeStamp();
+        RTC_SetDateTime(datetime);
 
-    // NW_WINC_OpenSocket(NW_WIFI_TCP_CLIENT,"192.168.1.115", NULL,5000,&socket_id);
-    // NW_WINC_SendSocket(socket_id,"Hello World", sizeof("Hello World"));
-    NW_WINC_OpenSocket(NW_WIFI_SSL_TCP_CLIENT,NULL,(unsigned char*)"api.traxxekg.com",443,&socket_id);
+        //vTaskDelay(5000 / portTICK_PERIOD_MS);
+        //RTC_GetTimeStamp();
+    }
+	TRACE_DBG("Programming Alaram \n");
+    /* Program RTC to wake up after 60 seconds */
+    RTC_SetAlaram(APP_HIBERNATE_TIME_SEC,app_callback, NULL);
+
     size = SENSOR_GetData(App_sensor_data_buf, APP_SENSOSR_DATA_SIZE);
-
-  //  TRACE_DBG("DATA GENERATED = %d \n",size);
-   // UTILITY_PrintBuffer(App_sensor_data_buf,size,1);
-  //  TRACE_DBG("Sensor Data(%d) :%.*s\n",size,size,App_sensor_data_buf);
- //   TRACE_DBG("DATA GENERATED2222222222222 = %d \n",size);
+//	SYS_CONSOLE_Write( SYS_CONSOLE_DEFAULT_INSTANCE ,App_sensor_data_buf, size);
+    NW_WINC_OpenSocket(NW_WIFI_SSL_TCP_CLIENT,NULL,(unsigned char*)"api.traxxekg.com",443,&socket_id);
     NW_WINC_SendSocket(socket_id,App_sensor_data_buf, size);    
     NW_WINC_ReceiveSocket(socket_id,App_sensor_data_buf, APP_SENSOSR_DATA_SIZE);
-
-  //  UTILITY_PrintBuffer(App_sensor_data_buf,200,1);
- //   TRACE_DBG("Received Buffer = %s\n",App_sensor_data_buf);
-      NW_WINC_CloseSocket(socket_id);
-      NW_WINC_Term();
-
-#endif
+//	SYS_CONSOLE_Write( SYS_CONSOLE_DEFAULT_INSTANCE ,App_sensor_data_buf, size);
+	NW_WINC_CloseSocket(socket_id);
+    NW_WINC_Term();
+    app_do_hibernate();
 	while(1)
 	{
 
@@ -315,6 +314,52 @@ static void app_release_msg_req(App_MsgReq *pMsg )
     }
     free(pMsg);
 }
+
+
+void _go_to_sleep(void){
+	__DSB();
+	__WFI();
+}
+
+int32_t _set_sleep_mode(const uint8_t mode)
+{
+	uint8_t delay = 10;
+
+	switch (mode) {
+	case 2:
+	case 4:
+	case 5:
+	case 6:
+	case 7:
+	//	hri_pm_write_SLEEPCFG_reg(PM, mode);
+        PM_REGS->PM_SLEEPCFG = mode;
+		/* A small latency happens between the store instruction and actual
+		 * writing of the SLEEPCFG register due to bridges. Software has to make
+		 * sure the SLEEPCFG register reads the wanted value before issuing WFI
+		 * instruction.
+		 */
+		do {
+		//	if (hri_pm_read_SLEEPCFG_reg(PM) == mode) {
+			if (PM_REGS->PM_SLEEPCFG == mode) {
+				break;
+			}
+		} while (--delay);
+		break;
+	default:
+		return -1;
+	}
+
+	return 0;
+}
+int sleep(const uint8_t mode)
+{
+	if (0 != _set_sleep_mode(mode))
+		return -1;
+
+	_go_to_sleep();
+
+	return 0;
+}
 static void app_do_hibernate()
 {
     unsigned int sleep_rdy_bit= 0x00;
@@ -330,18 +375,22 @@ static void app_do_hibernate()
 	CONF_VREG_CONFIG;
 	CONF_NVM_CONFIG;
 	CONF_PINS_CONFIG;
-	
+#endif	
+
+	CONF_BOD_CONFIG;	
+	CONF_NVM_CONFIG;
+	CONF_PINS_CONFIG;
+
 	/* put the device to hibernate mode by writing registers SLEEPCFG, MAINVREG */
-    sleep_rdy_bit = hri_pm_get_INTFLAG_SLEEPRDY_bit(PM);	
+    sleep_rdy_bit = PM_REGS->PM_INTFLAG;	
 	TRACE_INFO("%s Sleep Ready Bit Value = %d \n", __FUNCTION__,sleep_rdy_bit);	
 	
 	/* switch off System RAM as well as BACKUP RAM during hibernation */	
-	hri_pm_write_HIBCFG_reg(PM, PM_HIBCFG_RAMCFG(0x2) | PM_HIBCFG_BRAMCFG(0x2));
-	TRACE_INFO("%s COnfigured H1BCFG  register Value = %x \n", __FUNCTION__, hri_pm_get_HIBCFG_reg(PM, 0xff));	
-
+	PM_REGS->PM_HIBCFG = ( PM_HIBCFG_RAMCFG(0x2) | PM_HIBCFG_BRAMCFG(0x2));
+	TRACE_INFO("%s COnfigured H1BCFG  register Value = %x \n", __FUNCTION__, PM_REGS->PM_HIBCFG );	
 	if(sleep_rdy_bit)
 		sleep(HIBERNATE_MODE);
-#endif
+
 }
 
 static void app_callback()
@@ -419,11 +468,11 @@ LABEL1:
                 switch(i)
                 {
                 case 0:   /* "SSID = " */
-                    strncpy(App.ssid, found,strlen(found)-1);
+                    strncpy(App.ssid, found,strlen(found)-2);
                     TRACE_DBG("ssid =%s \n",App.ssid);
                     break;
                 case 1:   /* "PASSPHRASE = " */
-                    strncpy(App.passphrase, found,strlen(found)-1);
+                    strncpy(App.passphrase, found,strlen(found)-2);
                     TRACE_DBG("pass phrase=%s \n",App.passphrase);
                     break;
 
