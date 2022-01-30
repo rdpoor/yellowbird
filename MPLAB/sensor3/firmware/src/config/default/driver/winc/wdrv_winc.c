@@ -95,6 +95,10 @@
 // *****************************************************************************
 // Section: Global Data
 // *****************************************************************************
+
+extern void NW_WINC_socket_init();
+extern void NW_WINC_SignalInitComplete();
+extern void NW_WINC_wifi_cb_handler(uint8_t u8MsgType, void *pvMsg);
 // *****************************************************************************
 
 /* This is user configurable function pointer for printf style output from driver. */
@@ -194,7 +198,6 @@ static WDRV_WINC_CTRLDCPT wincCtrlDescriptor;
 /* This is the driver instance descriptor. */
 static WDRV_WINC_MACDCPT wincMACDescriptor;
 #endif
-extern void NW_WINC_SignalInitComplete();
 // *****************************************************************************
 // *****************************************************************************
 // Section: WINC MAC Driver Implementation
@@ -656,7 +659,7 @@ static void _WDRV_WINC_MACCheckRecvPacket(WDRV_WINC_DCPT *const pDcpt)
     None.
 
 */
-extern void NW_WINC_wifi_cb_handler(uint8_t u8MsgType, void *pvMsg);
+
 static void _WDRV_WINC_WifiCallback(uint8_t msgType, const void *const pMsgContent)
 {
     WDRV_WINC_DCPT *const pDcpt = &wincDescriptor[0];
@@ -666,8 +669,6 @@ static void _WDRV_WINC_WifiCallback(uint8_t msgType, const void *const pMsgConte
         return;
     }
     SYS_CONSOLE_PRINT("%s() Entry = %d   = %d   = %d    = %d  \n", __FUNCTION__,msgType,M2M_WIFI_RESP_CON_STATE_CHANGED,M2M_WIFI_RESP_GET_SYS_TIME,M2M_WIFI_REQ_DHCP_CONF );
-    NW_WINC_wifi_cb_handler(msgType, pMsgContent);
-        return;
 switch (msgType)
     {
         /* Requested BSS scan has completed. */
@@ -2102,7 +2103,6 @@ void WDRV_WINC_MACTasks(SYS_MODULE_OBJ object)
     }
 }
 #endif
-extern void NW_WINC_socket_init();
 //*******************************************************************************
 /*
   Function:
@@ -2310,9 +2310,7 @@ WDRV_DBG_ERROR_PRINT("WINC Interrupts Initialised \r\n");
 #endif
 
             WDRV_DBG_INFORM_PRINT("WINC: Initializing...complete\r\n");
-NW_WINC_SignalInitComplete();
-//  m2m_wifi_connect((char*)"wdbsystems", 10, M2M_WIFI_SEC_WPA_PSK,(char*) "WDBNet123", M2M_WIFI_CH_ALL);   
-
+            NW_WINC_SignalInitComplete();
             break;
         }
 
@@ -2330,7 +2328,6 @@ NW_WINC_SignalInitComplete();
                 {
                     break;
                 }
-//NW_WINC_SignalInitComplete();
 #ifdef WDRV_WINC_DEVICE_LITE_DRIVER
                 if (M2M_SUCCESS != m2m_wifi_handle_events(NULL))
 #else
