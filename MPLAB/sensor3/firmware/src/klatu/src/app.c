@@ -210,7 +210,7 @@ static void app_thread_entry_func(void *arg)
     }
 	TRACE_DBG("Programming Alaram \n");
     /* Program RTC to wake up after 60 seconds */
-    RTC_SetAlaram(APP_HIBERNATE_TIME_SEC,app_callback, NULL);
+    RTC_SetAlaram(App.frequency,app_callback, NULL);
 
     size = SENSOR_GetData(App_sensor_data_buf, APP_SENSOSR_DATA_SIZE);
 //	SYS_CONSOLE_Write( SYS_CONSOLE_DEFAULT_INSTANCE ,App_sensor_data_buf, size);
@@ -219,7 +219,7 @@ static void app_thread_entry_func(void *arg)
     NW_WINC_ReceiveSocket(socket_id,App_sensor_data_buf, APP_SENSOSR_DATA_SIZE);
 //	SYS_CONSOLE_Write( SYS_CONSOLE_DEFAULT_INSTANCE ,App_sensor_data_buf, size);
 	NW_WINC_CloseSocket(socket_id);
-    NW_WINC_Term();
+ //   NW_WINC_Term();
     app_do_hibernate();
 	while(1)
 	{
