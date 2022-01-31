@@ -192,7 +192,7 @@ static void app_thread_entry_func(void *arg)
     int size ;
     unsigned char datetime[30];
 	
-	TRACE_DBG("%s() Entry()\n",__FUNCTION__);
+	TRACE_DBG("%s() Entry() Priority = %d \n",__FUNCTION__,uxTaskPriorityGet(NULL));
 	app_read_config_file();
 	NW_WINC_connect(App.ssid,App.passphrase,M2M_WIFI_SEC_WPA_PSK);
     //if (hri_rstc_get_RCAUSE_POR_bit(RSTC))
@@ -202,7 +202,7 @@ static void app_thread_entry_func(void *arg)
         NW_WINC_GetSysTime(datetime);
         TRACE_DBG("Current date time = %s\n",datetime);
 
-        RTC_GetTimeStamp();
+        //RTC_GetTimeStamp();
         RTC_SetDateTime(datetime);
 
         //vTaskDelay(5000 / portTICK_PERIOD_MS);
