@@ -318,8 +318,15 @@ void SYS_CONSOLE_Print(const SYS_CONSOLE_HANDLE handle, const char *format, ...)
 {
     size_t len = 0;
     va_list args = {0};
-    SYS_CONSOLE_OBJECT_INSTANCE* pConsoleObj = SYS_CONSOLE_GET_INSTANCE(handle);
 
+   /* Must protect the common print buffer from multiple threads */
+    if(OSAL_MUTEX_Lock(&consolePrintBufferMutex, OSAL_WAIT_FOREVER) == OSAL_RESULT_FALSE)
+    {
+        return;
+    }
+
+    SYS_CONSOLE_OBJECT_INSTANCE* pConsoleObj = SYS_CONSOLE_GET_INSTANCE(handle);
+#if 0
     if (pConsoleObj == NULL)
     {
         return;
@@ -335,7 +342,7 @@ void SYS_CONSOLE_Print(const SYS_CONSOLE_HANDLE handle, const char *format, ...)
     {
         return;
     }
-
+#endif
     /* Get the variable arguments in va_list */
     va_start( args, format );
 
