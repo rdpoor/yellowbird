@@ -507,7 +507,7 @@ void NW_WINC_connect( unsigned char*         ssid,
 // Private (static) code
 static  void nw_winc_wifi_cb(uint8_t u8MsgType, void *pvMsg)
 {
-    printf("%s() Entry = %x\n",__FUNCTION__,u8MsgType);
+    TRACE_DBG("%s() Entry = %x priority = %d \n",__FUNCTION__,u8MsgType,uxTaskPriorityGet(NULL));
     switch (u8MsgType)
     {
         case M2M_WIFI_RESP_CON_STATE_CHANGED:
