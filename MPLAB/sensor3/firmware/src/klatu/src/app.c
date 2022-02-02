@@ -151,7 +151,9 @@ static unsigned char App_sensor_data_buf[APP_SENSOSR_DATA_SIZE];
 // =============================================================================
 // Public code
 extern int SENSOR_GetData(unsigned char* buf, int size);
-
+extern TaskHandle_t xFsHandle ;
+extern TaskHandle_t xSdHandle ;
+extern TaskHandle_t xWincHandle ;
 void APP_Start(void)
 {
     TRACE_Init();
@@ -194,6 +196,14 @@ static void app_thread_entry_func(void *arg)
 	
 	TRACE_DBG("%s() Entry() Priority = %d \n",__FUNCTION__,uxTaskPriorityGet(NULL));
 	app_read_config_file();
+
+#if 1
+    SYS_TIME_Deinitialize (  sysObj.sysTime  );
+
+    vTaskDelete( xFsHandle );
+
+    vTaskDelete( xSdHandle );
+#endif
 	NW_WINC_connect(App.ssid,App.passphrase,M2M_WIFI_SEC_WPA_PSK);
     //if (hri_rstc_get_RCAUSE_POR_bit(RSTC))
     {
@@ -219,7 +229,8 @@ static void app_thread_entry_func(void *arg)
     NW_WINC_ReceiveSocket(socket_id,App_sensor_data_buf, APP_SENSOSR_DATA_SIZE);
 //	SYS_CONSOLE_Write( SYS_CONSOLE_DEFAULT_INSTANCE ,App_sensor_data_buf, size);
 	NW_WINC_CloseSocket(socket_id);
- //   NW_WINC_Term();
+    NW_WINC_Term();
+    vTaskDelete( xWincHandle );
     app_do_hibernate();
 	while(1)
 	{
@@ -387,7 +398,10 @@ static void app_do_hibernate()
 	
 	/* switch off System RAM as well as BACKUP RAM during hibernation */	
 	PM_REGS->PM_HIBCFG = ( PM_HIBCFG_RAMCFG(0x2) | PM_HIBCFG_BRAMCFG(0x2));
-	TRACE_INFO("%s COnfigured H1BCFG  register Value = %x \n", __FUNCTION__, PM_REGS->PM_HIBCFG );	
+	TRACE_INFO("%s COnfigured H1BCFG  register Value = %x \n", __FUNCTION__, PM_REGS->PM_HIBCFG );
+
+NVIC_DisableIRQ(EIC_EXTINT_7_IRQn|DMAC_0_IRQn| DMAC_1_IRQn|TC0_IRQn|SERCOM6_1_IRQn|SERCOM6_2_IRQn|SERCOM6_OTHER_IRQn|SERCOM2_1_IRQn|SERCOM2_2_IRQn|SERCOM2_OTHER_IRQn|SERCOM4_1_IRQn|SERCOM4_2_IRQn|SERCOM4_OTHER_IRQn);
+	
 	if(sleep_rdy_bit)
 		sleep(HIBERNATE_MODE);
 
