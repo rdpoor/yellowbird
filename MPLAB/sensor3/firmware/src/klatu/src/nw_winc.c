@@ -60,7 +60,7 @@
 #define NW_WINC_WIFI_SYS_TIME_BIT             BIT2
 #define NW_WINC_WIFI_CUR_RSSI_BIT             BIT3
 #define NW_WINC_WIFI_INIT_BIT                 BIT4
-
+#define NW_WINC_WIFI_DEINIT_BIT               BIT5
 
 #define NW_WINC_SOCKET_DNS_BIT                  BIT0
 #define NW_WINC_SOCKET_CONNECTION_SUCCESS_BIT   BIT1
@@ -190,6 +190,7 @@ void NW_WINC_Term()
 {
     EventBits_t bits;
     TRACE_DBG("%s() Entry \n", __FUNCTION__);
+#if 0
 	m2m_wifi_disconnect();
  
     bits = xEventGroupWaitBits(pNwWifi->wifi_event_group,
@@ -204,6 +205,20 @@ void NW_WINC_Term()
     }
  //   m2m_wifi_deinit(NULL);
 //    nm_bsp_deinit();
+#endif
+    WDRV_WINC_Deinitialize (sysObj.drvWifiWinc );
+
+
+    bits = xEventGroupWaitBits(pNwWifi->wifi_event_group,
+                                   NW_WINC_WIFI_DEINIT_BIT,
+                                   pdFALSE,
+                                   pdFALSE,
+                                   portMAX_DELAY);
+    if( ( bits & NW_WINC_WIFI_DEINIT_BIT ) != 0 )
+    {
+        TRACE_INFO("%s() DEINIT DONE  \n", __FUNCTION__);
+   
+    }
 }
 
 int NW_WINC_OpenSocket(NW_WINC_socket_type_t type,
@@ -502,7 +517,11 @@ void NW_WINC_connect( unsigned char*         ssid,
     m2m_wifi_connect((char*)pNwWifi->ssid, strlen((char*)pNwWifi->ssid), pNwWifi->wifi_security, pNwWifi->pass_phrase, M2M_WIFI_CH_ALL);   
 
 }
-
+void NW_WINC_DeInitComplete()
+{
+ //   TRACE_DBG("%s() Entry \n", __FUNCTION__);
+    xEventGroupSetBits(pNwWifi->wifi_event_group, NW_WINC_WIFI_DEINIT_BIT);
+}
 // =============================================================================
 // Private (static) code
 static  void nw_winc_wifi_cb(uint8_t u8MsgType, void *pvMsg)
