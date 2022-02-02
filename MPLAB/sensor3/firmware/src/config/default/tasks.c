@@ -54,6 +54,9 @@
 #include "definitions.h"
 #include "app.h"
 
+TaskHandle_t xFsHandle ;
+TaskHandle_t xSdHandle ;
+TaskHandle_t xWincHandle ;
 
 // *****************************************************************************
 // *****************************************************************************
@@ -131,7 +134,7 @@ void SYS_Tasks ( void )
         SYS_FS_STACK_SIZE,
         (void*)NULL,
         SYS_FS_PRIORITY,
-        (TaskHandle_t*)NULL
+        (TaskHandle_t*)&xFsHandle
     );
 
 
@@ -143,7 +146,7 @@ void SYS_Tasks ( void )
         DRV_SDSPI_STACK_SIZE_IDX0,
         (void*)NULL,
         DRV_SDSPI_PRIORITY_IDX0,
-        (TaskHandle_t*)NULL
+        (TaskHandle_t*)&xSdHandle
     );
 
     xTaskCreate( _WDRV_WINC_Tasks,
@@ -151,7 +154,7 @@ void SYS_Tasks ( void )
         DRV_WIFI_WINC_RTOS_STACK_SIZE,
         (void*)NULL,
         DRV_WIFI_WINC_RTOS_TASK_PRIORITY,
-        (TaskHandle_t*)NULL
+        (TaskHandle_t*)&xWincHandle
     );
 
 
