@@ -201,8 +201,8 @@ unsigned int RTC_GetTimeStamp()
     current_ts = RTC_REGS->MODE2.RTC_CLOCK ;
 
     rtc_convert_timestamp_to_datetime(2016, current_ts,&cur_time);
-   	TRACE_DBG("Current Time Stamp = %lu \n",current_ts); 
-    TRACE_DBG("The Current date/time  %d/%d/%d  %d:%d:%d\n",cur_time.tm_mday, cur_time.tm_mon,cur_time.tm_year, cur_time.tm_hour,cur_time.tm_min,cur_time.tm_sec);
+  // 	TRACE_DBG("Current Time Stamp = %lu \n",current_ts); 
+  //  TRACE_DBG("The Current date/time  %d/%d/%d  %d:%d:%d\n",cur_time.tm_mday, cur_time.tm_mon,cur_time.tm_year, cur_time.tm_hour,cur_time.tm_min,cur_time.tm_sec);
 //RTC_RTCCTimeGet ( &cur_time);
 //TRACE_DBG("The Current date/time NEW   %d/%d/%d  %d:%d:%d\n",cur_time.tm_mday, cur_time.tm_mon,cur_time.tm_year, cur_time.tm_hour,cur_time.tm_min,cur_time.tm_sec);
 
