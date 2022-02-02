@@ -160,13 +160,8 @@ void APP_Start(void)
 	TRACE_DBG("%s() Entry\n", __FUNCTION__);
 	
 	//TRACE_DBG( " portTICK_RATE_MS = %d configMINIMAL_STACK_SIZE = %d\n",portTICK_RATE_MS,configMINIMAL_STACK_SIZE);	
-	
-	OSA_InitMsgQue(&App.app_thread_msg_q,(unsigned char*)"app_action_msg_q", APP_MSGQ_NO_OF_MESSAGES, sizeof(void *));
-		
-    OSA_InitMutex(&App.msg_q_mutex);
-#if 1
+
     RTC_Init(&App.Rtc,RTC_CALENDER);
-#endif
 	NW_WINC_Init(&App.Nw);
 
 	/* Create APP  thread */
@@ -178,11 +173,6 @@ void APP_Start(void)
 			     	 NULL,
 					 APP_THREAD_STACK_SIZE,
 					 0);
-}
-
-void App_send_msg_req_to_q(APP_MSG_TYPE msg_id, void* buf, unsigned int len,BOOLEAN is_isr_context)
-{
-    app_send_msg_req_to_q(msg_id,  buf,  len,is_isr_context);
 }
 
 // =============================================================================
@@ -232,99 +222,8 @@ static void app_thread_entry_func(void *arg)
     NW_WINC_Term();
     vTaskDelete( xWincHandle );
     app_do_hibernate();
-	while(1)
-	{
-
-		//TRACE_DBG( "WAIT ON APP MSG Q  configCPU_CLOCK_HZ = %d  configTICK_RATE_HZ= %d  portTICK_RATE_MS = %d \n",configCPU_CLOCK_HZ , configTICK_RATE_HZ,portTICK_RATE_MS);
-			
-		TRACE_DBG( "WAIT ON APP MSG Q\n");
-					
-		/* Blocking call till time out  */
-		OSA_ReceiveMsgQue(App.app_thread_msg_q,(void**) &pMsg);
-		
-		TRACE_DBG("APP THREAD MESSAGE ID  = %d\n",pMsg->msg_type);
-		
-		switch(pMsg->msg_type)
-        {
-            case APP_TIMER_EXPIRY_MSG:  
-				app_do_hibernate();            
-                break;
-			case APP_RTCTIMER_EXPIRY_MSG:
-				TRACE_DBG("RTC ALARM  EXPIRY MSG \n");
-				break;				
-			default:
-				break;
-		}
-		app_release_msg_req(pMsg);
-	}
 }
 
-static BOOLEAN app_send_msg_req_to_q(APP_MSG_TYPE msg_id, void* buf, unsigned int len,BOOLEAN is_isr_context)
-{
-	App_MsgReq *msg;
-
-    APP_LOCK_MSG_Q_MUTEX(is_isr_context,&App.msg_q_mutex);
-
-    msg  = (App_MsgReq *) malloc(sizeof(App_MsgReq));
-
-    if(msg)
-    {
-        TRACE_INFO("%s Entry \n", __FUNCTION__);
-        msg->msg_buf = NULL;
-        msg->msg_len = 0;
-
-        if(len != 0)
-        {
-            msg->msg_buf = malloc(len);
-            if(msg->msg_buf)
-            {
-                memcpy((unsigned int *)msg->msg_buf,(unsigned int*)buf,len);
-                msg->msg_len = len;
-            }
-            else
-            {
-                free(msg);
-                APP_UNLOCK_MSG_Q_MUTEX(is_isr_context,&App.msg_q_mutex);
-                return STATUS_ERR; 
-            }
-        }
-        msg->msg_type = msg_id;
-
-        if(is_isr_context)
-        {
-            TRACE_INFO("%s ISR Context \n", __FUNCTION__);
-            if(!OSA_SendMsgQueIsr(App.app_thread_msg_q,msg)) 
-            {
-                TRACE_WARN("Failed to post to App queue IN ISR Context\n");
-                APP_UNLOCK_MSG_Q_MUTEX(is_isr_context,&App.msg_q_mutex);
-                return STATUS_ERR;
-            }
-        }
-        else
-        {
-            TRACE_INFO("%s NON ISR Context \n", __FUNCTION__);
-            if(!OSA_SendMsgQue(App.app_thread_msg_q,msg)) 
-            {
-                TRACE_WARN("Failed to post to App queue\n");
-                APP_UNLOCK_MSG_Q_MUTEX(is_isr_context,&App.msg_q_mutex);
-                return STATUS_ERR;
-            }
-        }
-        APP_UNLOCK_MSG_Q_MUTEX(is_isr_context,&App.msg_q_mutex); 
-        return STATUS_OK;  
-    }
-    APP_UNLOCK_MSG_Q_MUTEX(is_isr_context,&App.msg_q_mutex);
-    return STATUS_ERR;
-}
-
-static void app_release_msg_req(App_MsgReq *pMsg )
-{
-    if(pMsg->msg_buf)
-    {
-        free(pMsg->msg_buf);
-    }
-    free(pMsg);
-}
 
 
 void _go_to_sleep(void){
@@ -376,17 +275,7 @@ static void app_do_hibernate()
     unsigned int sleep_rdy_bit= 0x00;
 
 	TRACE_INFO("%s Entry \n", __FUNCTION__);
-#if 0	
-	/* Switch off HW blocks gracefully TBD  */
 	
-	
-	CONF_PL_CONFIG;
-//	CONF_DFLL_CONFIG;
-	CONF_BOD_CONFIG;
-	CONF_VREG_CONFIG;
-	CONF_NVM_CONFIG;
-	CONF_PINS_CONFIG;
-#endif	
 
 	CONF_BOD_CONFIG;	
 	CONF_NVM_CONFIG;
@@ -398,9 +287,9 @@ static void app_do_hibernate()
 	
 	/* switch off System RAM as well as BACKUP RAM during hibernation */	
 	PM_REGS->PM_HIBCFG = ( PM_HIBCFG_RAMCFG(0x2) | PM_HIBCFG_BRAMCFG(0x2));
-	TRACE_INFO("%s COnfigured H1BCFG  register Value = %x \n", __FUNCTION__, PM_REGS->PM_HIBCFG );
+	TRACE_INFO("%s Configured H1BCFG  register Value = %x \n", __FUNCTION__, PM_REGS->PM_HIBCFG );
 
-NVIC_DisableIRQ(EIC_EXTINT_7_IRQn|DMAC_0_IRQn| DMAC_1_IRQn|TC0_IRQn|SERCOM6_1_IRQn|SERCOM6_2_IRQn|SERCOM6_OTHER_IRQn|SERCOM2_1_IRQn|SERCOM2_2_IRQn|SERCOM2_OTHER_IRQn|SERCOM4_1_IRQn|SERCOM4_2_IRQn|SERCOM4_OTHER_IRQn);
+    NVIC_DisableIRQ(EIC_EXTINT_7_IRQn|DMAC_0_IRQn| DMAC_1_IRQn|TC0_IRQn|SERCOM6_1_IRQn|SERCOM6_2_IRQn|SERCOM6_OTHER_IRQn|SERCOM2_1_IRQn|SERCOM2_2_IRQn|SERCOM2_OTHER_IRQn|SERCOM4_1_IRQn|SERCOM4_2_IRQn|SERCOM4_OTHER_IRQn);
 	
 	if(sleep_rdy_bit)
 		sleep(HIBERNATE_MODE);
@@ -410,7 +299,6 @@ NVIC_DisableIRQ(EIC_EXTINT_7_IRQn|DMAC_0_IRQn| DMAC_1_IRQn|TC0_IRQn|SERCOM6_1_IR
 static void app_callback()
 {
 	TRACE_INFO("%s Entry \n", __FUNCTION__);
-	app_send_msg_req_to_q(APP_RTCTIMER_EXPIRY_MSG, NULL, 0,TRUE);
 }
 
 static int app_read_config_file()
