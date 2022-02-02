@@ -99,6 +99,7 @@
 extern void NW_WINC_socket_init();
 extern void NW_WINC_SignalInitComplete();
 extern void NW_WINC_wifi_cb_handler(uint8_t u8MsgType, void *pvMsg);
+extern void NW_WINC_DeInitComplete();
 // *****************************************************************************
 
 /* This is user configurable function pointer for printf style output from driver. */
@@ -2159,6 +2160,8 @@ void WDRV_WINC_Tasks(SYS_MODULE_OBJ object)
                 WDRV_WINC_INTDeinitialize();
 
                 pDcpt->isInit = false;
+
+                NW_WINC_DeInitComplete();
             }
 
             break;
