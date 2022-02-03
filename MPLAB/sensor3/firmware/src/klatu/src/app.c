@@ -184,16 +184,17 @@ static void app_thread_entry_func(void *arg)
     int size ;
     unsigned char datetime[30];
 	
-	TRACE_DBG("%s() Entry() Priority = %d \n",__FUNCTION__,uxTaskPriorityGet(NULL));
+	TRACE_DBG("%s() Entry() Priority = %d  portTICK_PERIOD_MS = %d \n",__FUNCTION__,uxTaskPriorityGet(NULL),portTICK_PERIOD_MS);
 	app_read_config_file();
 
 #if 1
     SYS_TIME_Deinitialize (  sysObj.sysTime  );
-
+    NVIC_DisableIRQ(TC0_IRQn);
+    vTaskDelay(2 / portTICK_PERIOD_MS);
     vTaskDelete( xFsHandle );
-
     vTaskDelete( xSdHandle );
 #endif
+
 	NW_WINC_connect(App.ssid,App.passphrase,M2M_WIFI_SEC_WPA_PSK);
     //if (hri_rstc_get_RCAUSE_POR_bit(RSTC))
     {
@@ -220,8 +221,18 @@ static void app_thread_entry_func(void *arg)
 //	SYS_CONSOLE_Write( SYS_CONSOLE_DEFAULT_INSTANCE ,App_sensor_data_buf, size);
 	NW_WINC_CloseSocket(socket_id);
     NW_WINC_Term();
+
+  while (SERCOM2_USART_WriteCountGet() > 0) {
+    asm("nop");
+  }
     vTaskDelete( xWincHandle );
     app_do_hibernate();
+ asm("nop");
+  while (1) {
+    LED_Toggle();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+
 }
 
 
@@ -287,10 +298,15 @@ static void app_do_hibernate()
 	
 	/* switch off System RAM as well as BACKUP RAM during hibernation */	
 	PM_REGS->PM_HIBCFG = ( PM_HIBCFG_RAMCFG(0x2) | PM_HIBCFG_BRAMCFG(0x2));
-	TRACE_INFO("%s Configured H1BCFG  register Value = %x \n", __FUNCTION__, PM_REGS->PM_HIBCFG );
+//	TRACE_INFO("%s Configured H1BCFG  register Value = %x \n", __FUNCTION__, PM_REGS->PM_HIBCFG );
+    // Allow printing to finish before hibernation
+	while (SERCOM2_USART_WriteCountGet() > 0)
+	{
+		asm("nop");
+	}
 
-    NVIC_DisableIRQ(EIC_EXTINT_7_IRQn|DMAC_0_IRQn| DMAC_1_IRQn|TC0_IRQn|SERCOM6_1_IRQn|SERCOM6_2_IRQn|SERCOM6_OTHER_IRQn|SERCOM2_1_IRQn|SERCOM2_2_IRQn|SERCOM2_OTHER_IRQn|SERCOM4_1_IRQn|SERCOM4_2_IRQn|SERCOM4_OTHER_IRQn);
-	
+	NVIC_DisableIRQ(EIC_EXTINT_7_IRQn|DMAC_0_IRQn| DMAC_1_IRQn|TC0_IRQn|SERCOM6_1_IRQn|SERCOM6_2_IRQn|SERCOM6_OTHER_IRQn|SERCOM2_1_IRQn|SERCOM2_2_IRQn|SERCOM2_OTHER_IRQn|SERCOM4_1_IRQn|SERCOM4_2_IRQn|SERCOM4_OTHER_IRQn);
+    LED_On();	
 	if(sleep_rdy_bit)
 		sleep(HIBERNATE_MODE);
 
