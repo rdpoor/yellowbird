@@ -299,7 +299,7 @@ int SENSOR_GetData(unsigned char* buf, int size)
 
     rsp +=sprintf((char *)rsp,"TkZCVE02R1Y3QVVFMlNSREtNSjNENllVSUk6S1g0VFhRSlBFSEZDWUVBRDJGR0dTMlFGVUc2R1hHNlFHQzdQQ0ZZ\r\n"); 
  
-    rsp +=sprintf((char *)rsp,"Content-Length: %d\r\n",981);
+    rsp +=sprintf((char *)rsp,"Content-Length: %d\r\n",978);
 
     rsp +=sprintf((char *)rsp,"\r\n");
  
