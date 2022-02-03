@@ -55,7 +55,7 @@
 
 #include "interrupts.h"
 #include "plib_tc0.h"
-
+#include "definitions.h" 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Global Data
@@ -118,11 +118,22 @@ void TC0_TimerStart( void )
 /* Disable the TC counter */
 void TC0_TimerStop( void )
 {
+    SYS_CONSOLE_PRINT("Timer0 Setting  = %x\n",TC0_REGS->COUNT16.TC_CTRLA);
+    //SYS_CONSOLE_PRINT("Before  Counter  = %x\n",TC0_Timer16bitCounterGet());
     TC0_REGS->COUNT16.TC_CTRLA &= ~TC_CTRLA_ENABLE_Msk;
     while((TC0_REGS->COUNT16.TC_SYNCBUSY & TC_SYNCBUSY_ENABLE_Msk) == TC_SYNCBUSY_ENABLE_Msk)
     {
         /* Wait for Write Synchronization */
     }
+    TC0_CallbackObject.callback = NULL;
+    //SYS_CONSOLE_PRINT("Timer0 Stop  Setting  = %x\n",TC0_REGS->COUNT16.TC_CTRLA);
+    //SYS_CONSOLE_PRINT("After  TC_INTENSET = %x\n",TC0_REGS->COUNT16.TC_INTENSET);
+    //TC0_REGS->COUNT16.TC_INTENCLR = (uint8_t)(TC_INTENCLR_MC1_Msk);
+    //SYS_CONSOLE_PRINT("After Disabling  TC_INTENSET = %x\n",TC0_REGS->COUNT16.TC_INTENSET);
+    /* Clear all interrupt flags */
+    //TC0_REGS->COUNT16.TC_INTFLAG = (uint8_t)TC_INTFLAG_Msk;
+    //SYS_CONSOLE_PRINT("After  Counter  = %x\n",TC0_Timer16bitCounterGet());
+    //SYS_CONSOLE_PRINT("After  Counter  = %x\n",TC0_Timer16bitCounterGet());
 }
 
 uint32_t TC0_TimerFrequencyGet( void )
