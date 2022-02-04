@@ -190,7 +190,7 @@ void NW_WINC_Term()
 {
     EventBits_t bits;
     TRACE_DBG("%s() Entry \n", __FUNCTION__);
-#if 0
+#if 1
 	m2m_wifi_disconnect();
  
     bits = xEventGroupWaitBits(pNwWifi->wifi_event_group,
@@ -206,7 +206,7 @@ void NW_WINC_Term()
  //   m2m_wifi_deinit(NULL);
 //    nm_bsp_deinit();
 #endif
-#if 1
+#if 0
     WDRV_WINC_Deinitialize (sysObj.drvWifiWinc );
 
 
