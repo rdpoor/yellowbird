@@ -401,24 +401,26 @@ static void rtc_calender_set_alarm(unsigned int time_duration_sec)
     TRACE_DBG("Present  date/time  %d/%d/%d  %d:%d:%d\n",cur_time.tm_mday, cur_time.tm_mon,cur_time.tm_year, cur_time.tm_hour,cur_time.tm_min,cur_time.tm_sec);
 
     current_ts +=time_duration_sec;
+	taskENTER_CRITICAL();
   	RTC_REGS->MODE2.RTC_ALARM0 = current_ts;
  	while((RTC_REGS->MODE2.RTC_SYNCBUSY & RTC_MODE2_SYNCBUSY_ALARM0_Msk) == RTC_MODE2_SYNCBUSY_ALARM0_Msk)
     {
         /* Synchronization after writing value to CLOCK Register */
     }
+	RTC_REGS->MODE2.RTC_MASK0 = 6; //matching year 
+	RTC_REGS->MODE2.RTC_INTENSET |=0x100;
+	taskEXIT_CRITICAL();
  	rtc_convert_timestamp_to_datetime(2016, current_ts,&cur_time);
    //	TRACE_DBG("Alarm Time Stamp = %lu \n",current_ts); 
     TRACE_DBG("Alarm Expected  date/time  %d/%d/%d  %d:%d:%d\n",cur_time.tm_mday, cur_time.tm_mon,cur_time.tm_year, cur_time.tm_hour,cur_time.tm_min,cur_time.tm_sec);
 
-	RTC_REGS->MODE2.RTC_MASK0 = 6; //matching year 
-
-    inter_status = RTC_REGS->MODE2.RTC_INTENSET;
+  //  inter_status = RTC_REGS->MODE2.RTC_INTENSET;
 //	TRACE_INFO("%s Alaram Interrupt Status  = %x \n", __FUNCTION__,inter_status);
-	RTC_REGS->MODE2.RTC_INTENSET |=0x100;
 
-	inter_status = RTC_REGS->MODE2.RTC_INTENSET;
+
+//	inter_status = RTC_REGS->MODE2.RTC_INTENSET;
      
-	TRACE_INFO("%s Exit = %x \n", __FUNCTION__,inter_status);
+	TRACE_INFO("%s Exit \n", __FUNCTION__);
 }
 
 static void rtc_alarm_callback_handler()
