@@ -300,9 +300,16 @@ static void app_do_hibernate()
 	PM_REGS->PM_HIBCFG = ( PM_HIBCFG_RAMCFG(0x2) | PM_HIBCFG_BRAMCFG(0x2));
 //	TRACE_INFO("%s Configured H1BCFG  register Value = %x \n", __FUNCTION__, PM_REGS->PM_HIBCFG );
     // Allow printing to finish before hibernation
-	while (SERCOM2_USART_WriteCountGet() > 0)
+  
+int x;
+LABEL2:
+taskENTER_CRITICAL();
+  x =   SERCOM2_USART_WriteCountGet();
+taskEXIT_CRITICAL();
+	while (x > 0)
 	{
 		asm("nop");
+goto LABEL2;
 	}
 
 	NVIC_DisableIRQ(EIC_EXTINT_7_IRQn|DMAC_0_IRQn| DMAC_1_IRQn|TC0_IRQn|SERCOM6_1_IRQn|SERCOM6_2_IRQn|SERCOM6_OTHER_IRQn|SERCOM2_1_IRQn|SERCOM2_2_IRQn|SERCOM2_OTHER_IRQn|SERCOM4_1_IRQn|SERCOM4_2_IRQn|SERCOM4_OTHER_IRQn);
