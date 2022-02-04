@@ -206,6 +206,7 @@ void NW_WINC_Term()
  //   m2m_wifi_deinit(NULL);
 //    nm_bsp_deinit();
 #endif
+#if 1
     WDRV_WINC_Deinitialize (sysObj.drvWifiWinc );
 
 
@@ -219,6 +220,7 @@ void NW_WINC_Term()
         TRACE_INFO("%s() DEINIT DONE  \n", __FUNCTION__);
    
     }
+#endif
 }
 
 int NW_WINC_OpenSocket(NW_WINC_socket_type_t type,
@@ -518,8 +520,10 @@ void NW_WINC_connect( unsigned char*         ssid,
 
 }
 void NW_WINC_DeInitComplete()
-{
- //   TRACE_DBG("%s() Entry \n", __FUNCTION__);
+{			
+	WDRV_WINC_CHIP_EN_Clear();
+	WDRV_WINC_RESETN_Clear()  ;
+    TRACE_DBG("%s() Entry \n", __FUNCTION__);
     xEventGroupSetBits(pNwWifi->wifi_event_group, NW_WINC_WIFI_DEINIT_BIT);
 }
 // =============================================================================
@@ -538,9 +542,11 @@ static  void nw_winc_wifi_cb(uint8_t u8MsgType, void *pvMsg)
                // m2m_wifi_request_dhcp_client();
             }
             else if (pstrWifiState->u8CurrState == M2M_WIFI_DISCONNECTED) {
-                TRACE_DBG("m2m_wifi_state: M2M_WIFI_RESP_CON_STATE_CHANGED: DISCONNECTED");
+                TRACE_DBG("m2m_wifi_state: M2M_WIFI_RESP_CON_STATE_CHANGED: DISCONNECTED\n");
                 m2m_wifi_connect((char*)pNwWifi->ssid, strlen((char*)pNwWifi->ssid), pNwWifi->wifi_security, pNwWifi->pass_phrase, M2M_WIFI_CH_ALL);
                 pNwWifi->is_network_up = FALSE;
+				WDRV_WINC_CHIP_EN_Clear();
+				WDRV_WINC_RESETN_Clear()  ;
                 xEventGroupSetBits(pNwWifi->wifi_event_group, NW_WINC_WIFI_DISCONNECTION_BIT);
                 xEventGroupClearBits(pNwWifi->wifi_event_group, NW_WINC_WIFI_CONNECTION_BIT);
             }
