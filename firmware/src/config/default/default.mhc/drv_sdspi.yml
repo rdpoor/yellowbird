@@ -17,7 +17,7 @@ children:
     - type: Values
       children:
       - type: Dynamic
-        attributes: {id: drv_sdspi, value: Synchronous}
+        attributes: {id: drv_sdspi, value: Asynchronous}
       - type: User
         attributes: {value: Asynchronous}
   - type: File
@@ -123,7 +123,7 @@ children:
           - type: Boolean
             attributes: {id: visible}
             children:
-            - {type: Value, value: 'true'}
+            - {type: Value, value: 'false'}
       - type: Integer
         attributes: {id: DRV_SDSPI_RX_DMA_CHANNEL}
         children:

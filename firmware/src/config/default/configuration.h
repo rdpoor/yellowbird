@@ -115,9 +115,6 @@ extern "C" {
 #define SYS_FS_FILE_NAME_LEN              255
 #define SYS_FS_CWD_STRING_LEN             1024
 
-/* File System RTOS Configurations*/
-#define SYS_FS_STACK_SIZE                 1024
-#define SYS_FS_PRIORITY                   1
 
 #define SYS_FS_FAT_VERSION                "v0.14a"
 #define SYS_FS_FAT_READONLY               false
@@ -151,9 +148,6 @@ extern "C" {
 
 
 
-/* SDSPI Driver Instance 0 RTOS Configurations*/
-#define DRV_SDSPI_STACK_SIZE_IDX0               256
-#define DRV_SDSPI_PRIORITY_IDX0                     1
 
 /* SDSPI Driver Common Configuration Options */
 #define DRV_SDSPI_INSTANCES_NUMBER              1
@@ -183,9 +177,6 @@ extern "C" {
 #define WDRV_WINC_DEVICE_OTA_STATUS_EXTENDED
 #define WDRV_WINC_DEVICE_SCAN_SSID_LIST
 #define WDRV_WINC_DEVICE_USE_SYS_DEBUG
-/*** WiFi WINC Driver RTOS Configuration ***/
-#define DRV_WIFI_WINC_RTOS_STACK_SIZE           1024
-#define DRV_WIFI_WINC_RTOS_TASK_PRIORITY        1
 
 /* SPI Driver Instance 0 Configuration Options */
 #define DRV_SPI_INDEX_0                       0

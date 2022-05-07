@@ -54,61 +54,6 @@
 #include "definitions.h"
 
 
-// *****************************************************************************
-// *****************************************************************************
-// Section: RTOS "Tasks" Routine
-// *****************************************************************************
-// *****************************************************************************
-void _DRV_SDSPI_0_Tasks(  void *pvParameters  )
-{
-    while(1)
-    {
-        DRV_SDSPI_Tasks(sysObj.drvSDSPI0);
-        vTaskDelay(10 / portTICK_PERIOD_MS);
-    }
-}
-
-/* Handle for the APP_Tasks. */
-TaskHandle_t xAPP_Tasks;
-
-void _APP_Tasks(  void *pvParameters  )
-{   
-    while(1)
-    {
-        APP_Tasks();
-        vTaskDelay(5 / portTICK_PERIOD_MS);
-    }
-}
-
-static void _WDRV_WINC_Tasks(void *pvParameters)
-{
-    while(1)
-    {
-        SYS_STATUS status;
-
-        WDRV_WINC_Tasks(sysObj.drvWifiWinc);
-
-        status = WDRV_WINC_Status(sysObj.drvWifiWinc);
-
-        if ((SYS_STATUS_ERROR == status) || (SYS_STATUS_UNINITIALIZED == status))
-        {
-            vTaskDelay(50 / portTICK_PERIOD_MS);
-        }
-    }
-}
-
-
-void _SYS_FS_Tasks(  void *pvParameters  )
-{
-    while(1)
-    {
-        SYS_FS_Tasks();
-        vTaskDelay(10 / portTICK_PERIOD_MS);
-    }
-}
-
-
-
 
 
 // *****************************************************************************
@@ -129,32 +74,14 @@ void SYS_Tasks ( void )
     /* Maintain system services */
     
 
-    xTaskCreate( _SYS_FS_Tasks,
-        "SYS_FS_TASKS",
-        SYS_FS_STACK_SIZE,
-        (void*)NULL,
-        SYS_FS_PRIORITY,
-        (TaskHandle_t*)NULL
-    );
+SYS_FS_Tasks();
 
 
 
     /* Maintain Device Drivers */
-        xTaskCreate( _DRV_SDSPI_0_Tasks,
-        "DRV_SD_0_TASKS",
-        DRV_SDSPI_STACK_SIZE_IDX0,
-        (void*)NULL,
-        DRV_SDSPI_PRIORITY_IDX0,
-        (TaskHandle_t*)NULL
-    );
+    DRV_SDSPI_Tasks(sysObj.drvSDSPI0);
 
-    xTaskCreate( _WDRV_WINC_Tasks,
-        "WDRV_WINC_Tasks",
-        DRV_WIFI_WINC_RTOS_STACK_SIZE,
-        (void*)NULL,
-        DRV_WIFI_WINC_RTOS_TASK_PRIORITY,
-        (TaskHandle_t*)NULL
-    );
+    WDRV_WINC_Tasks(sysObj.drvWifiWinc);
 
 
 
@@ -163,23 +90,11 @@ void SYS_Tasks ( void )
     
 
     /* Maintain the application's state machine. */
-        /* Create OS Thread for APP_Tasks. */
-    xTaskCreate((TaskFunction_t) _APP_Tasks,
-                "APP_Tasks",
-                2048,
-                NULL,
-                1,
-                &xAPP_Tasks);
+        /* Call Application task APP. */
+    APP_Tasks();
 
 
 
-
-    /* Start RTOS Scheduler. */
-    
-     /**********************************************************************
-     * Create all Threads for APP Tasks before starting FreeRTOS Scheduler *
-     ***********************************************************************/
-    vTaskStartScheduler(); /* This function never returns. */
 
 }
 

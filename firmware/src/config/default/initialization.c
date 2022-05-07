@@ -408,9 +408,12 @@ void SYS_Initialize ( void* data )
     CLOCK_Initialize();
 
 
-    // [rdp] We use the RTC to wake the processor from hibernate mode, and in
-    // order to avoid time slippage it must run continually.  RTC_Initialize()
-    // resets the RTC count, so we call it in APP_Initialize() on cold reboot.
+
+
+    // [rdp] We use the RTC to wake the processor from hibernate mode. In order 
+    // to avoid time slippage it must run continually without getting reset.  
+    // Because RTC_Initialize() resets the RTC, we call it in APP_Initialize() 
+    // only on cold reboot rather than always calling it here.
     // RTC_Initialize();
 
     TC3_TimerInitialize();
