@@ -148,7 +148,7 @@ void winc_task_step(void) {
                                  NULL)) {
         winc_task_set_state(WINC_TASK_STATE_SCANNING);
       } else {
-        SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
+        printf(
                         "\nCall to WDRV_WINC_BSSFindFirst() failed");
         endgame(WINC_TASK_STATE_ERROR);
       }
@@ -162,7 +162,7 @@ void winc_task_step(void) {
     if (WDRV_WINC_BSSFindInProgress(s_winc_task_ctx.wdrHandle)) {
       // remain in this state
     } else {
-      SYS_CONSOLE_PRINT(
+      printf(
           "\nScan complete, %d AP(s) found",
           WDRV_WINC_BSSFindGetNumBSSResults(s_winc_task_ctx.wdrHandle));
       winc_task_set_state(WINC_TASK_STATE_GETTING_SCAN_RESULTS);
@@ -175,7 +175,7 @@ void winc_task_step(void) {
 
     if (WDRV_WINC_STATUS_OK ==
         WDRV_WINC_BSSFindGetInfo(s_winc_task_ctx.wdrHandle, &BSSInfo)) {
-      SYS_CONSOLE_PRINT(
+      printf(
           "\nAP found: RSSI: %d %s", BSSInfo.rssi, BSSInfo.ctx.ssid.name);
 
       status = WDRV_WINC_BSSFindNext(s_winc_task_ctx.wdrHandle, NULL);
@@ -191,7 +191,7 @@ void winc_task_step(void) {
         // remain in this state to complete printing out scanned APs
       }
     } else {
-      SYS_DEBUG_PRINT(SYS_ERROR_ERROR, "\nError in WDRV_WINC_BSSFindGetInfo");
+      printf( "\nError in WDRV_WINC_BSSFindGetInfo");
       endgame(WINC_TASK_STATE_ERROR);
     }
 
@@ -224,7 +224,7 @@ void winc_task_step(void) {
     } while (false);
 
     if (err) {
-      SYS_DEBUG_PRINT(SYS_ERROR_ERROR, "\n%s", err);
+      printf( "\n%s", err);
       endgame(WINC_TASK_STATE_ERROR);
 
     } else {
@@ -256,7 +256,7 @@ void winc_task_step(void) {
             s_winc_task_ctx.wdrHandle, WINC_TASK_NTP_POOL_HOSTNAME, true)) {
       winc_task_set_state(WINC_TASK_STATE_GET_NTP);
     } else {
-      SYS_DEBUG_PRINT(SYS_ERROR_ERROR, "\nNTP request failed");
+      printf( "\nNTP request failed");
       endgame(WINC_TASK_STATE_ERROR);
     }
   } break;
@@ -268,7 +268,7 @@ void winc_task_step(void) {
                                        winc_task_ntp_cb)) {
       winc_task_set_state(WINC_TASK_STATE_SUCCESS);
     } else {
-      SYS_DEBUG_PRINT(SYS_ERROR_ERROR, "\nNTP get failed");
+      printf( "\nNTP get failed");
       endgame(WINC_TASK_STATE_ERROR);
     }
   } break;
@@ -329,7 +329,7 @@ static void winc_task_dhcp_cb(DRV_HANDLE handle, uint32_t dhcpAddr) {
 static void winc_task_ntp_cb(DRV_HANDLE handle, uint32_t timeUTC) {
   (void)handle;
   s_winc_task_ctx.timeUTC = timeUTC;
-  SYS_DEBUG_PRINT(SYS_ERROR_INFO, "\ntimeUTC = %lu", timeUTC);
+  printf( "\ntimeUTC = %lu", timeUTC);
 }
 
 static void winc_task_wifi_notify_cb(DRV_HANDLE handle,
@@ -337,11 +337,11 @@ static void winc_task_wifi_notify_cb(DRV_HANDLE handle,
                                      WDRV_WINC_CONN_STATE currentState,
                                      WDRV_WINC_CONN_ERROR errorCode) {
   if (WDRV_WINC_CONN_STATE_CONNECTED == currentState) {
-    SYS_DEBUG_PRINT(SYS_ERROR_INFO, "\nConnected to AP");
+    printf( "\nConnected to AP");
     winc_task_set_state(WINC_TASK_STATE_REQ_NTP);
 
   } else if (WDRV_WINC_CONN_STATE_DISCONNECTED == currentState) {
-    SYS_DEBUG_PRINT(SYS_ERROR_INFO, "\nDisconnected from AP");
+    printf( "\nDisconnected from AP");
     winc_task_set_state(WINC_TASK_STATE_REQ_CONNECTION);
   }
 }

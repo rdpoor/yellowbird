@@ -203,4 +203,4 @@ children:
             children:
             - {type: Value, value: SERCOM6_SPI}
 - type: ElementPosition
-  attributes: {x: '172', y: '506', id: drv_sdspi}
+  attributes: {x: '174', y: '383', id: drv_sdspi}

@@ -31,9 +31,9 @@
 #include "yb_utils.h"
 
 #include "definitions.h"
-#include "system/console/sys_console.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 // *****************************************************************************
 // Local (private) types and definitions
@@ -48,7 +48,7 @@
 // Public code
 
 void yb_utils_log_timestamp(void) {
-  SYS_CONSOLE_PRINT("\n%10lu ", SYS_TIME_CountToMS(SYS_TIME_CounterGet()));
+  printf("\n%10lu ", SYS_TIME_CountToMS(SYS_TIME_CounterGet()));
 }
 
 // *****************************************************************************

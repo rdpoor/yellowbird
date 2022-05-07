@@ -46,7 +46,7 @@ extern "C" {
 
 #define YB_LOG(...) do { \
   yb_utils_log_timestamp(); \
-  SYS_CONSOLE_PRINT(__VA_ARGS__); \
+  printf(__VA_ARGS__); \
 } while (0)
 
 #define YB_LOG_STATE_CHANGE(s0, s1) YB_LOG("%s => %s", s0, s1)

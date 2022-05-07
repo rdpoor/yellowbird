@@ -32,4 +32,4 @@ children:
       - type: TargetAttachment
         attributes: {targetComponentID: drv_sdspi_0, targetAttachmentID: drv_media}
 - type: ElementPosition
-  attributes: {x: '348', y: '586', id: sys_fs}
+  attributes: {x: '347', y: '463', id: sys_fs}

@@ -32,11 +32,11 @@
 
 #include "definitions.h"
 #include "spi_flash_map.h"
-#include "system/console/sys_console.h"
 #include "wdrv_winc_client_api.h"
 #include "yb_utils.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 // *****************************************************************************
 // Local (private) types and definitions
@@ -121,10 +121,10 @@ void winc_imager_step(void) {
   case WINC_IMAGER_STATE_OPENING_WINC: {
     s_winc_imager_ctx.winc_handle = WDRV_WINC_Open(0, DRV_IO_INTENT_EXCLUSIVE);
     if (s_winc_imager_ctx.winc_handle != DRV_HANDLE_INVALID) {
-      SYS_DEBUG_MESSAGE(SYS_ERROR_DEBUG, "\nOpened WINC1500");
+      printf("\nOpened WINC1500");
       winc_imager_set_state(WINC_IMAGER_STATE_VALIDATING_IMAGE_FILE);
     } else {
-      SYS_DEBUG_MESSAGE(SYS_ERROR_ERROR, "\nUnable to open WINC1500");
+      printf("\nUnable to open WINC1500");
       endgame(WINC_IMAGER_STATE_ERROR);
     }
   } break;
@@ -138,13 +138,13 @@ void winc_imager_step(void) {
     if (SYS_FS_FileStat(s_winc_imager_ctx.filename, &stat_buf) !=
         SYS_FS_RES_SUCCESS) {
       // fstat failed.
-      SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
+      printf(
                       "\nUnable to determine size of %s",
                       s_winc_imager_ctx.filename);
       endgame(WINC_IMAGER_STATE_ERROR);
     } else if (stat_buf.fsize != WINC_IMAGE_SIZE) {
       // File size doesn't match WINC image size
-      SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
+      printf(
                       "\nExpected %s to be %ld bytes, but found %ld",
                       s_winc_imager_ctx.filename,
                       WINC_IMAGE_SIZE,
@@ -152,8 +152,7 @@ void winc_imager_step(void) {
       endgame(WINC_IMAGER_STATE_ERROR);
     } else {
       // File looks like a WINC image.
-      SYS_DEBUG_PRINT(
-          SYS_ERROR_DEBUG, "\nFound valid %s file", s_winc_imager_ctx.filename);
+      printf("\nFound valid %s file", s_winc_imager_ctx.filename);
       winc_imager_set_state(WINC_IMAGER_STATE_OPENING_IMAGE_FILE);
     }
   } break;
@@ -162,13 +161,13 @@ void winc_imager_step(void) {
     s_winc_imager_ctx.file_handle =
         SYS_FS_FileOpen(s_winc_imager_ctx.filename, SYS_FS_FILE_OPEN_READ);
     if (s_winc_imager_ctx.file_handle != SYS_FS_HANDLE_INVALID) {
-      SYS_DEBUG_PRINT(SYS_ERROR_INFO,
+      printf(
                       "\nComparing image file %s against WINC contents ",
                       s_winc_imager_ctx.filename);
       s_winc_imager_ctx.sector = 0;
       winc_imager_set_state(WINC_IMAGER_STATE_COMPARING_SECTORS);
     } else {
-      SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
+      printf(
                       "\nUnable to open image file %s",
                       s_winc_imager_ctx.filename);
       endgame(WINC_IMAGER_STATE_ERROR);
@@ -177,12 +176,12 @@ void winc_imager_step(void) {
 
   case WINC_IMAGER_STATE_COMPARING_SECTORS: {
     if (s_winc_imager_ctx.sector == WINC_SECTOR_COUNT) {
-      SYS_DEBUG_PRINT(SYS_ERROR_INFO,
+      printf(
                       "\nWINC firmware matches %s",
                        s_winc_imager_ctx.filename);
       winc_imager_set_state(WINC_IMAGER_STATE_CLOSING_RESOURCES);
     } else {
-      SYS_DEBUG_PRINT(SYS_ERROR_DEBUG,
+      printf(
                       "\nComparing sector %d out of %d",
                       s_winc_imager_ctx.sector,
                       WINC_SECTOR_COUNT);
@@ -196,13 +195,13 @@ void winc_imager_step(void) {
     if (n_read == FLASH_SECTOR_SZ) {
       winc_imager_set_state(WINC_IMAGER_STATE_READING_WINC_SECTOR);
     } else if (n_read == -1) {
-      SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
+      printf(
                       "\nReading image file %s failed",
                       s_winc_imager_ctx.filename);
       endgame(WINC_IMAGER_STATE_ERROR);
     } else {
-      SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
-                      "\nRead %ld bytes from %s, expected %ld",
+      printf(
+                      "\nRead %u bytes from %s, expected %ld",
                       n_read,
                       s_winc_imager_ctx.filename,
                       FLASH_SECTOR_SZ);
@@ -218,7 +217,7 @@ void winc_imager_step(void) {
                           FLASH_SECTOR_SZ) == WDRV_WINC_STATUS_OK) {
       winc_imager_set_state(WINC_IMAGER_STATE_COMPARING_BUFFERS);
     } else {
-      SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
+      printf(
                       "\nFailed to read %ld bytes from %s",
                       FLASH_SECTOR_SZ,
                       s_winc_imager_ctx.filename);
@@ -235,7 +234,7 @@ void winc_imager_step(void) {
     }
     if (!buffers_differ) {
       // buffers match - advance to next sector
-      SYS_DEBUG_PRINT(SYS_ERROR_INFO, ".");
+      printf( ".");
       winc_imager_set_state(WINC_IMAGER_STATE_INCREMENT_WRITE_SECTOR);
     } else {
       // buffers differ - erase and overwrite this sector
@@ -245,17 +244,17 @@ void winc_imager_step(void) {
 
   case WINC_IMAGER_STATE_ERASING_WINC_SECTOR: {
     // Erase sector in preparation for overwriting
-    SYS_DEBUG_PRINT(SYS_ERROR_INFO, "!");
+    printf( "!");
     if (WDRV_WINC_NVMEraseSector(s_winc_imager_ctx.winc_handle,
                                  WDRV_WINC_NVM_REGION_RAW,
                                  s_winc_imager_ctx.sector,
                                  1) == WDRV_WINC_STATUS_OK) {
-      SYS_DEBUG_PRINT(
-          SYS_ERROR_DEBUG, "\nErased sector %d", s_winc_imager_ctx.sector);
+      printf(
+          "\nErased sector %d", s_winc_imager_ctx.sector);
       winc_imager_set_state(WINC_IMAGER_STATE_WRITING_WINC_SECTOR);
     } else {
-      SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
-                      "\nErasing sector %s failed",
+      printf(
+                      "\nErasing sector %d failed",
                       s_winc_imager_ctx.sector);
       endgame(WINC_IMAGER_STATE_ERROR);
     }
@@ -268,12 +267,12 @@ void winc_imager_step(void) {
                            s_file_buffer,
                            SECTOR_TO_OFFSET(s_winc_imager_ctx.sector),
                            FLASH_SECTOR_SZ) == WDRV_WINC_STATUS_OK) {
-      SYS_DEBUG_PRINT(
-          SYS_ERROR_DEBUG, "\nWrote sector %d", s_winc_imager_ctx.sector);
+      printf(
+          "\nWrote sector %d", s_winc_imager_ctx.sector);
       winc_imager_set_state(WINC_IMAGER_STATE_INCREMENT_WRITE_SECTOR);
     } else {
-      SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
-                      "\nWriting sector %s failed",
+      printf(
+                      "\nWriting sector %d failed",
                       s_winc_imager_ctx.sector);
       endgame(WINC_IMAGER_STATE_ERROR);
     }

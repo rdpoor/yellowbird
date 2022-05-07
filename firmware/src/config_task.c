@@ -38,6 +38,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <strings.h>
+#include <stdio.h>
 
 // *****************************************************************************
 // Local (private) types and definitions
@@ -106,7 +107,7 @@ void config_task_step(void) {
   case CONFIG_TASK_SETTING_DRIVE: {
     // Set current drive so that we do not have to use absolute path.
     if (SYS_FS_CurrentDriveSet(SD_MOUNT_NAME) == SYS_FS_RES_FAILURE) {
-      SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
+      printf(
                       "\nUnable to select drive, error %d",
                       SYS_FS_Error());
       endgame(CONFIG_TASK_STATE_ERROR);
@@ -120,7 +121,7 @@ void config_task_step(void) {
     s_config_task_ctx.file_handle =
         SYS_FS_FileOpen(CONFIG_FILE_NAME, SYS_FS_FILE_OPEN_READ);
     if (s_config_task_ctx.file_handle == SYS_FS_HANDLE_INVALID) {
-      SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
+      printf(
                       "\nUnable to open config file, error %d",
                       SYS_FS_Error());
       endgame(CONFIG_TASK_STATE_ERROR);
@@ -147,14 +148,14 @@ void config_task_step(void) {
       char *line = FATFS_gets(
           s_read_buf, sizeof(s_read_buf), s_config_task_ctx.file_handle);
       if (line == NULL) {
-        SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
+        printf(
                         "\nError while reading config file, error %d",
                         SYS_FS_Error());
         endgame(CONFIG_TASK_STATE_ERROR);
         // TODO:
         // } else if (parse_config_line(s_read_buf) == false) {
         //   // error while parsing config file...
-        //   SYS_DEBUG_PRINT(SYS_ERROR_ERROR, "\nError while parsing config
+        //   printf( "\nError while parsing config
         //   file"); endgame(CONFIG_TASK_STATE_ERROR);
       } else {
         // stay in this state to read and parse more lines

@@ -36,13 +36,13 @@
 #include "nv_data.h"
 #include "http_task.h"
 #include "spi_flash_map.h"
-#include "system/console/sys_console.h"
 #include "wdrv_winc_client_api.h"
 #include "winc_imager.h"
 #include "winc_task.h"
 #include "yb_utils.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 // *****************************************************************************
 // Local types and definitions
@@ -80,7 +80,6 @@ typedef enum { EXPAND_APP_STATES } APP_STATES;
 
 typedef struct {
   APP_STATES state;
-  SYS_CONSOLE_HANDLE consoleHandle;
   uint32_t mount_retries;
 } APP_DATA;
 
@@ -127,7 +126,6 @@ static char HTTP_RESPONSE_BUF[HTTP_RESPONSE_BUFLEN];
 // Public code
 
 void APP_Initialize(void) {
-  SYS_DEBUG_ErrorLevelSet(SYS_ERROR_INFO);
   appData.state = APP_STATE_INIT;
   if (app_is_cold_boot()) {
     nv_data_clear();     // forget everything you knew...
@@ -141,7 +139,6 @@ void APP_Tasks(void) {
   switch (appData.state) {
 
   case APP_STATE_INIT: {
-    appData.consoleHandle = SYS_CONSOLE_HandleGet(SYS_CONSOLE_INDEX_0);
     nv_data()->app_nv_data.reboot_count += 1;
     app_set_state(APP_STATE_AWAIT_WINC);
   } break;
@@ -316,12 +313,12 @@ static const char *app_state_name(APP_STATES state) {
 }
 
 static void print_banner(void) {
-  SYS_CONSOLE_PRINT("\n##############################");
-  SYS_CONSOLE_PRINT("\n# Klatu Networks Yellowbird, v %s (%s boot) #%d",
+  printf("\n##############################");
+  printf("\n# Klatu Networks Yellowbird, v %s (%s boot) #%lu",
                     APP_VERSION,
                     app_is_cold_boot() ? "cold" : "warm",
                     nv_data()->app_nv_data.reboot_count);
-  SYS_CONSOLE_PRINT("\n##############################");
+  printf("\n##############################");
 }
 
 static void app_go_to_sleep(void) {
@@ -351,10 +348,7 @@ static void app_go_to_sleep(void) {
 }
 
 static bool system_is_busy(void) {
-  bool is_busy = false;
-  if (SERCOM2_USART_WriteCountGet() > 0) {
-    is_busy = true;
-  }
+  bool is_busy = !SERCOM2_USART_TransmitComplete();
   return is_busy;
 }
 
@@ -371,22 +365,22 @@ static void print_winc_version(void) {
     ret = hif_init(NULL); // m2m_hif.h
     if (ret == M2M_SUCCESS) {
       ret = nm_get_firmware_full_info(&strtmp); // nmdrv.h
-      SYS_CONSOLE_PRINT("\nWINC1500 Info:");
-      SYS_CONSOLE_PRINT("\n  Chip ID: %ld", strtmp.u32Chipid);
-      SYS_CONSOLE_PRINT("\n  Firmware Ver: %u.%u.%u SVN Rev %u",
+      printf("\nWINC1500 Info:");
+      printf("\n  Chip ID: %ld", strtmp.u32Chipid);
+      printf("\n  Firmware Ver: %u.%u.%u SVN Rev %u",
                         strtmp.u8FirmwareMajor,
                         strtmp.u8FirmwareMinor,
                         strtmp.u8FirmwarePatch,
                         strtmp.u16FirmwareSvnNum);
-      SYS_CONSOLE_PRINT("\n  Firmware Built at %s Time %s",
+      printf("\n  Firmware Built at %s Time %s",
                         strtmp.BuildDate,
                         strtmp.BuildTime);
-      SYS_CONSOLE_PRINT("\n  Firmware Min Driver Ver: %u.%u.%u",
+      printf("\n  Firmware Min Driver Ver: %u.%u.%u",
                         strtmp.u8DriverMajor,
                         strtmp.u8DriverMinor,
                         strtmp.u8DriverPatch);
       if (M2M_ERR_FW_VER_MISMATCH == ret) {
-        SYS_CONSOLE_PRINT("\n  Mismatch Firmware Version");
+        printf("\n  Mismatch Firmware Version");
       }
     }
     hif_deinit(NULL); // nmdrv.h

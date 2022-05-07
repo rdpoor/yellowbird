@@ -48,19 +48,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include "peripheral/nvmctrl/plib_nvmctrl.h"
-#include "peripheral/rtc/plib_rtc.h"
-#include "peripheral/tc/plib_tc3.h"
-#include "driver/sdspi/drv_sdspi.h"
-#include "system/time/sys_time.h"
-#include "bsp/bsp.h"
-#include "driver/spi/drv_spi.h"
-#include "system/int/sys_int.h"
-#include "system/ports/sys_ports.h"
-#include "system/cache/sys_cache.h"
-#include "system/dma/sys_dma.h"
-#include "osal/osal.h"
-#include "system/debug/sys_debug.h"
 #include "peripheral/sercom/usart/plib_sercom2_usart.h"
 #include "peripheral/evsys/plib_evsys.h"
 #include "driver/winc/include/wdrv_winc_api.h"
@@ -73,15 +62,25 @@
 #include "peripheral/pm/plib_pm.h"
 #include "peripheral/sercom/spi_master/plib_sercom4_spi_master.h"
 #include "peripheral/eic/plib_eic.h"
+#include "peripheral/rtc/plib_rtc.h"
 #include "peripheral/rstc/plib_rstc.h"
+#include "peripheral/tc/plib_tc3.h"
+#include "driver/sdspi/drv_sdspi.h"
+#include "system/time/sys_time.h"
+#include "bsp/bsp.h"
 #include "system/fs/sys_fs.h"
 #include "system/fs/sys_fs_media_manager.h"
 #include "system/fs/sys_fs_fat_interface.h"
 #include "system/fs/fat_fs/file_system/ff.h"
 #include "system/fs/fat_fs/file_system/ffconf.h"
 #include "system/fs/fat_fs/hardware_access/diskio.h"
-#include "system/console/sys_console.h"
-#include "system/console/src/sys_console_uart_definitions.h"
+#include "driver/spi/drv_spi.h"
+#include "system/int/sys_int.h"
+#include "system/ports/sys_ports.h"
+#include "system/cache/sys_cache.h"
+#include "system/dma/sys_dma.h"
+#include "osal/osal.h"
+#include "system/debug/sys_debug.h"
 #include "app.h"
 
 
@@ -210,15 +209,11 @@ typedef struct
     /* SDSPI0 Driver Object */
     SYS_MODULE_OBJ drvSDSPI0;
 
-    SYS_MODULE_OBJ  sysTime;
-    SYS_MODULE_OBJ  sysConsole0;
-
     SYS_MODULE_OBJ  drvWifiWinc;
     /* SPI0 Driver Object */
     SYS_MODULE_OBJ drvSPI0;
 
-    SYS_MODULE_OBJ  sysDebug;
-
+    SYS_MODULE_OBJ  sysTime;
 
 } SYSTEM_OBJECTS;
 

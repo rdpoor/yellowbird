@@ -97,20 +97,20 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: AF984BE0991599B02E1D672FDFDA2D8E
-- generatedChecksum: C99BD9086FE2E694E4019D08040D9872
+- generatedChecksum: F2344DCD26575F1D375842942B0DC27D
   logicalPath: config/default
   name: initialization.c
   physicalPath: ''
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 4CB959CF7703BF83415325C1C16CE676
-- generatedChecksum: 338B2B4E514CE07FE18ABFFDA3BF3D04
+  userChecksum: F2344DCD26575F1D375842942B0DC27D
+- generatedChecksum: 199CE31149DF565920144DAB079B54BD
   logicalPath: config/default
   name: interrupts.c
   physicalPath: ''
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 338B2B4E514CE07FE18ABFFDA3BF3D04
+  userChecksum: 199CE31149DF565920144DAB079B54BD
 - generatedChecksum: 6513F2461B8F476B68CA73906086047F
   logicalPath: config/default
   name: libc_syscalls.c
@@ -230,13 +230,13 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: C3ECDED3D6301DB0DE622293ED615D21
-- generatedChecksum: 1AA11588EB2A368685249BDECB40DD76
+- generatedChecksum: DA24D6504781FFCE67093243CEDDCFED
   logicalPath: config/default/peripheral/nvic
   name: plib_nvic.c
   physicalPath: peripheral/nvic
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 1AA11588EB2A368685249BDECB40DD76
+  userChecksum: DA24D6504781FFCE67093243CEDDCFED
 - generatedChecksum: 903E0413B53BA9E8980C740E65F59966
   logicalPath: config/default/peripheral/nvmctrl
   name: plib_nvmctrl.c
@@ -272,13 +272,13 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: A1248A3809E9FAA55371E4C87E88D064
-- generatedChecksum: 84CF61AB19C08BE15EA26265D4BEFAA4
+- generatedChecksum: A221A54F5449F8DC2A6A04088DF49AA6
   logicalPath: config/default/peripheral/sercom/usart
   name: plib_sercom2_usart.c
   physicalPath: peripheral/sercom/usart
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 84CF61AB19C08BE15EA26265D4BEFAA4
+  userChecksum: A221A54F5449F8DC2A6A04088DF49AA6
 - generatedChecksum: 75BCCBBB886DE2D86217F7F9B849F0F6
   logicalPath: config/default/peripheral/sercom/spi_master
   name: plib_sercom4_spi_master.c
@@ -328,55 +328,6 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: 92901E4C07604DD5EC594B58CEC2720B
-- generatedChecksum: 20C22A19D5DC74DEBFC4CCCA83B6F603
-  logicalPath: config/default/system/console
-  name: sys_console.c
-  physicalPath: system/console/src
-  security: NON_SECURE
-  type: SOURCE
-  userChecksum: 20C22A19D5DC74DEBFC4CCCA83B6F603
-- generatedChecksum: 5BA0902794A8669B3FE37E8A8BEE9D65
-  logicalPath: config/default/system/console
-  name: sys_console_local.h
-  physicalPath: system/console/src
-  security: NON_SECURE
-  type: SOURCE
-  userChecksum: 5BA0902794A8669B3FE37E8A8BEE9D65
-- generatedChecksum: CA5E9B63704372DE5FBC0BDC006B16C3
-  logicalPath: config/default/system/console
-  name: sys_console_uart.c
-  physicalPath: system/console/src
-  security: NON_SECURE
-  type: SOURCE
-  userChecksum: CA5E9B63704372DE5FBC0BDC006B16C3
-- generatedChecksum: 767495C6A39617A915D8107093DC1A72
-  logicalPath: config/default/system/console
-  name: sys_console_uart.h
-  physicalPath: system/console/src
-  security: NON_SECURE
-  type: SOURCE
-  userChecksum: 767495C6A39617A915D8107093DC1A72
-- generatedChecksum: 5D10B9438117B64220180660AB022150
-  logicalPath: config/default/system/console
-  name: sys_console_uart_definitions.h
-  physicalPath: system/console/src
-  security: NON_SECURE
-  type: SOURCE
-  userChecksum: 5D10B9438117B64220180660AB022150
-- generatedChecksum: 68C0D499B9EDAA3BFD7E131A48514212
-  logicalPath: config/default/system/debug
-  name: sys_debug.c
-  physicalPath: system/debug/src
-  security: NON_SECURE
-  type: SOURCE
-  userChecksum: 68C0D499B9EDAA3BFD7E131A48514212
-- generatedChecksum: B8C6C7356AC7841AECC7C779040F745C
-  logicalPath: config/default/system/debug
-  name: sys_debug_local.h
-  physicalPath: system/debug/src
-  security: NON_SECURE
-  type: SOURCE
-  userChecksum: B8C6C7356AC7841AECC7C779040F745C
 - generatedChecksum: 5182754E707E008E4C8788FCAB430380
   logicalPath: config/default/system/dma
   name: sys_dma.c
@@ -566,13 +517,13 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: D8399AAD9B69D69A67A8F188A0862F1C
-- generatedChecksum: 7806B30ECAE0D18D08CD583D8775530D
+- generatedChecksum: 9ED91CAFA7A2646B34DEF4BE8A8A57A9
   logicalPath: config/default/stdio
   name: xc32_monitor.c
   physicalPath: stdio
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 7806B30ECAE0D18D08CD583D8775530D
+  userChecksum: 9ED91CAFA7A2646B34DEF4BE8A8A57A9
 - generatedChecksum: 4AA3C718C9DF39F86ADCA089CF7344BF
   logicalPath: packs/ATSAME54P20A_DFP/component
   name: ac.h
@@ -741,13 +692,13 @@ files:
   security: NON_SECURE
   type: HEADER
   userChecksum: 52F91AC0727F2311EDA0E3BAA7719A9F
-- generatedChecksum: 50E4C356944ABB6A6A2C6E1E3A00EC28
+- generatedChecksum: 7257276B4B36C32FD05A06143049CAFD
   logicalPath: config/default
   name: configuration.h
   physicalPath: ''
   security: NON_SECURE
   type: HEADER
-  userChecksum: 50E4C356944ABB6A6A2C6E1E3A00EC28
+  userChecksum: 7257276B4B36C32FD05A06143049CAFD
 - generatedChecksum: 7EF1FAD7778FEEAC9467270306D7F7C0
   logicalPath: packs/CMSIS/CMSIS/Core/Include
   name: core_cm4.h
@@ -769,13 +720,13 @@ files:
   security: NON_SECURE
   type: HEADER
   userChecksum: 3F95A1A7B1479E80077C092E2AA1755F
-- generatedChecksum: D8A3E583DE14A9AC1D313F4562257C40
+- generatedChecksum: 3A45862821E5F028A7B39A09918B8963
   logicalPath: config/default
   name: definitions.h
   physicalPath: ''
   security: NON_SECURE
   type: HEADER
-  userChecksum: D8A3E583DE14A9AC1D313F4562257C40
+  userChecksum: 3A45862821E5F028A7B39A09918B8963
 - generatedChecksum: AA255350342164F392C52E11EFC2A7F3
   logicalPath: config/default
   name: device.h
@@ -1042,13 +993,13 @@ files:
   security: NON_SECURE
   type: HEADER
   userChecksum: A25CDAA1015B6F4D86DDA6F4F98FADAE
-- generatedChecksum: AE66739034E4640E9A8003668979EE81
+- generatedChecksum: F7663084395E163130136674392624C2
   logicalPath: config/default
   name: interrupts.h
   physicalPath: ''
   security: NON_SECURE
   type: HEADER
-  userChecksum: AE66739034E4640E9A8003668979EE81
+  userChecksum: F7663084395E163130136674392624C2
 - generatedChecksum: 67425BB33C9075607E40580599779775
   logicalPath: config/default/driver/winc/include/drv/driver
   name: m2m_hif.h
@@ -1357,13 +1308,13 @@ files:
   security: NON_SECURE
   type: HEADER
   userChecksum: ACE767D8206A6A42EF629864312793A7
-- generatedChecksum: 5918A5D1BACBE04FC667A4255E7CC97C
+- generatedChecksum: 3483A352FFE8C9101A808A2A4898DC04
   logicalPath: config/default/peripheral/sercom/usart
   name: plib_sercom2_usart.h
   physicalPath: peripheral/sercom/usart
   security: NON_SECURE
   type: HEADER
-  userChecksum: 5918A5D1BACBE04FC667A4255E7CC97C
+  userChecksum: 3483A352FFE8C9101A808A2A4898DC04
 - generatedChecksum: 42F88900EEB53795E252A6A8AAFDCA7C
   logicalPath: config/default/peripheral/sercom/spi_master
   name: plib_sercom4_spi_master.h
@@ -1637,13 +1588,6 @@ files:
   security: NON_SECURE
   type: HEADER
   userChecksum: AFAAF7D896D57569CA4CF73BB3339481
-- generatedChecksum: 91CB36F6EC29DAA7C584282A875E5CBA
-  logicalPath: config/default/system/console
-  name: sys_console.h
-  physicalPath: system/console
-  security: NON_SECURE
-  type: HEADER
-  userChecksum: 91CB36F6EC29DAA7C584282A875E5CBA
 - generatedChecksum: 6BB6C54C5CD963A5A940CF7BB28F4E10
   logicalPath: config/default/system/debug
   name: sys_debug.h
