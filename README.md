@@ -1,6 +1,70 @@
 # Klatu Networks "Yellowbird" Project
 _rdpoor@gmail.com, Feb 2022_
 
+## dev notes for v0.1.0
+
+### On cold boot:
+
+Consult SD card for presence of `config.txt` file.  If present, parse the file
+to get any application parameters:
+
+* wifi_ssid: The SSID of the SP [default = none]
+* wifi_pass: The WiFi password [default = none]
+* host_url: The URL for a host server for a packet exchange.
+* wake_interval_ms: How often the system wakes [60000]
+* timeout_ms: How long the system will stay awake before timeout [15000]
+* winc_image: The filename of the WINC image to flash, if present [none]
+* log_level: The debug level for serial output
+
+All configuration parameters except winc_image are saved to non-volatile RAM
+and used on warm reboots.
+
+If winc_iamge is present, and the named file exists, the WINC will be reflashed
+with the named image.
+
+### On warm boot (and after cold boot)
+
+* Initialize the WINC
+* Connect to the AP
+* Open a socket to the host server
+* Send a packet
+* Verify response
+* hibernate until wake_interval_ms has elapsed
+* Reboot
+
+If the above sequence does not complete within timeout_ms, the system will
+stop what it is doing and (almost) immediately hibernate, shutting down any
+peripherals prior to hibernations.
+
+### Waking and hibernating
+
+On cold boot the system writes the RTC count into app.last_wake_at.  Before
+hibernating, it increments last_wake_at by wake_interval_ms and sets the RTC
+to wake the processor at that time (assuming it is sufficiently far in the
+future) and enters hibernate mote.
+
+But before hibernating, it calls `<module>_will_sleep()` for relevant modules
+in order to let them do any cleanup prior to hibernation.
+
+### Module list (tentative)
+
+#### tasks (with internal state)
+
+* app - low-level chip and board initialization, marshals other modules.  On
+  cold boot, opens filesystem on the sd card.
+* config_task - reads filesystem, reads and processes config.txt
+* http_task - opens socket, exchanges packet with remote host.
+* imager_task - reads filesystem, reprograms WINC as needed.
+* winc_task - manages the winc chip through its various states.
+
+#### other modules
+
+* mu_parse_cfg - parse a config.txt formatted file
+* mu_parse_url - parse a URL to extract socket, etc.
+* mu_strbuf, mu_str - "zero copy" string manipulation functions
+* nv_data - non-volatile data storage and retrieval
+* yb_log - logging support that honors log_level
+
 ## Context
 Klatu develops and sells remote monitoring systems, with a primary focus on
 performance and predictive monitoring for ultra-low refrigeration equipment.
