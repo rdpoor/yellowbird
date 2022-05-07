@@ -133,9 +133,8 @@
                 <itemPath>../src/config/default/peripheral/sercom/usart/plib_sercom_usart_common.h</itemPath>
               </logicalFolder>
             </logicalFolder>
-            <logicalFolder name="f10" displayName="tc" projectFiles="true">
-              <itemPath>../src/config/default/peripheral/tc/plib_tc_common.h</itemPath>
-              <itemPath>../src/config/default/peripheral/tc/plib_tc3.h</itemPath>
+            <logicalFolder name="f14" displayName="systick" projectFiles="true">
+              <itemPath>../src/config/default/peripheral/systick/plib_systick.h</itemPath>
             </logicalFolder>
           </logicalFolder>
           <logicalFolder name="f3" displayName="system" projectFiles="true">
@@ -460,8 +459,8 @@
                 <itemPath>../src/config/default/peripheral/sercom/usart/plib_sercom2_usart.c</itemPath>
               </logicalFolder>
             </logicalFolder>
-            <logicalFolder name="f10" displayName="tc" projectFiles="true">
-              <itemPath>../src/config/default/peripheral/tc/plib_tc3.c</itemPath>
+            <logicalFolder name="f14" displayName="systick" projectFiles="true">
+              <itemPath>../src/config/default/peripheral/systick/plib_systick.c</itemPath>
             </logicalFolder>
           </logicalFolder>
           <logicalFolder name="f3" displayName="stdio" projectFiles="true">
@@ -542,7 +541,6 @@
         <itemPath>../src/config/default/default.mhc/stdio.yml</itemPath>
         <itemPath>../src/config/default/default.mhc/sys_fs.yml</itemPath>
         <itemPath>../src/config/default/default.mhc/sys_time.yml</itemPath>
-        <itemPath>../src/config/default/default.mhc/tc3.yml</itemPath>
       </logicalFolder>
       <itemPath>Makefile</itemPath>
       <itemPath>../src/config/default/harmony-manifest-success.yml</itemPath>

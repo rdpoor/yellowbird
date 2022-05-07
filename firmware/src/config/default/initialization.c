@@ -319,19 +319,19 @@ const SYS_FS_REGISTRATION_TABLE sysFSInit [ SYS_FS_MAX_FILE_SYSTEM_TYPE ] =
 // <editor-fold defaultstate="collapsed" desc="SYS_TIME Initialization Data">
 
 const SYS_TIME_PLIB_INTERFACE sysTimePlibAPI = {
-    .timerCallbackSet = (SYS_TIME_PLIB_CALLBACK_REGISTER)TC3_TimerCallbackRegister,
-    .timerStart = (SYS_TIME_PLIB_START)TC3_TimerStart,
-    .timerStop = (SYS_TIME_PLIB_STOP)TC3_TimerStop,
-    .timerFrequencyGet = (SYS_TIME_PLIB_FREQUENCY_GET)TC3_TimerFrequencyGet,
-    .timerPeriodSet = (SYS_TIME_PLIB_PERIOD_SET)TC3_Timer16bitPeriodSet,
-    .timerCompareSet = (SYS_TIME_PLIB_COMPARE_SET)TC3_Timer16bitCompareSet,
-    .timerCounterGet = (SYS_TIME_PLIB_COUNTER_GET)TC3_Timer16bitCounterGet,
+    .timerCallbackSet = (SYS_TIME_PLIB_CALLBACK_REGISTER)SYSTICK_TimerCallbackSet,
+    .timerStart = (SYS_TIME_PLIB_START)SYSTICK_TimerStart,
+    .timerStop = (SYS_TIME_PLIB_STOP)SYSTICK_TimerStop,
+    .timerFrequencyGet = (SYS_TIME_PLIB_FREQUENCY_GET)SYSTICK_TimerFrequencyGet,
+    .timerInterruptEnable = (SYS_TIME_PLIB_INTERRUPT_ENABLE)SYSTICK_TimerInterruptEnable,
+    .timerInterruptDisable = (SYS_TIME_PLIB_INTERRUPT_DISABLE)SYSTICK_TimerInterruptDisable,
+    .timerPeriodSet = (SYS_TIME_PLIB_PERIOD_SET)SYSTICK_TimerPeriodSet,
 };
 
 const SYS_TIME_INIT sysTimeInitData =
 {
     .timePlib = &sysTimePlibAPI,
-    .hwTimerIntNum = TC3_IRQn,
+    .hwTimerIntNum = SysTick_IRQn,
 };
 
 // </editor-fold>
@@ -398,6 +398,7 @@ void SYS_Initialize ( void* data )
 
     SERCOM6_SPI_Initialize();
 
+	SYSTICK_TimerInitialize();
     DMAC_Initialize();
 
     PM_Initialize();
@@ -407,8 +408,6 @@ void SYS_Initialize ( void* data )
     EIC_Initialize();
 
     RTC_Initialize();
-
-    TC3_TimerInitialize();
 
 	BSP_Initialize();
 
