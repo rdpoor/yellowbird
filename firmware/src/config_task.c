@@ -31,12 +31,16 @@
 #include "config_task.h"
 
 #include "definitions.h"
+#include "mu_cfg_parser.h"
+#include "mu_str.h"
+#include "mu_strbuf.h"
 #include "nv_data.h"
 #include "winc_imager.h"
 #include "yb_log.h"
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 // #include <strings.h>
 #include <stdio.h>
 
@@ -62,6 +66,7 @@ typedef struct {
   config_task_state_t state;
   SYS_FS_HANDLE file_handle;
   const char *file_name;
+  mu_cfg_parser_t parser;
 } config_task_ctx_t;
 
 // *****************************************************************************
@@ -70,8 +75,17 @@ typedef struct {
 static void config_task_set_state(config_task_state_t new_state);
 static const char *config_task_state_name(config_task_state_t state);
 
+static void token_parser(mu_str_t *value, const void *arg);
+
 // *****************************************************************************
 // Local (private, static) storage
+
+static const mu_cfg_parser_token_t s_tokens[] = {
+    {"wifi_ssid", "wifi_ssid", token_parser},
+    {"wifi_pass", "wifi_pass", token_parser},
+    {"wake_interval_ms", "wake_interval_ms", token_parser},
+    {"timeout_ms", "timeout_ms", token_parser},
+    {"winc_image", "winc_image", token_parser}};
 
 static char s_read_buf[MAX_CONFIG_LINE_LENGTH];
 
@@ -87,6 +101,10 @@ static const char *config_task_state_names[] = {EXPAND_CONFIG_TASK_STATES};
 void config_task_init(const char *filename) {
   s_config_task_ctx.state = CONFIG_TASK_STATE_INIT;
   s_config_task_ctx.file_name = filename;
+  mu_cfg_parser_init(&s_config_task_ctx.parser,
+                     s_tokens,
+                     sizeof(s_tokens) / sizeof(mu_cfg_parser_token_t),
+                     true);
 }
 
 void config_task_step(void) {
@@ -100,7 +118,7 @@ void config_task_step(void) {
   case CONFIG_TASK_SETTING_DRIVE: {
     // Set current drive so that we do not have to use absolute path.
     if (SYS_FS_CurrentDriveSet(SD_MOUNT_NAME) == SYS_FS_RES_FAILURE) {
-      printf("\nUnable to select drive, error %d", SYS_FS_Error());
+      YB_LOG_ERROR("Unable to select drive, error %d", SYS_FS_Error());
       config_task_set_state(CONFIG_TASK_STATE_ERROR);
     } else {
       config_task_set_state(CONFIG_TASK_STATE_OPENING_CONFIG);
@@ -112,7 +130,7 @@ void config_task_step(void) {
     s_config_task_ctx.file_handle =
         SYS_FS_FileOpen(s_config_task_ctx.file_name, SYS_FS_FILE_OPEN_READ);
     if (s_config_task_ctx.file_handle == SYS_FS_HANDLE_INVALID) {
-      printf("\nUnable to open config file, error %d", SYS_FS_Error());
+      YB_LOG_ERROR("Unable to open config file, error %d", SYS_FS_Error());
       config_task_set_state(CONFIG_TASK_STATE_ERROR);
     } else {
       config_task_set_state(CONFIG_TASK_STATE_READING_CONFIG);
@@ -124,20 +142,14 @@ void config_task_step(void) {
     if (FATFS_eof(s_config_task_ctx.file_handle)) {
       // We have processed the last line of config.txt -- all done.
       SYS_FS_FileClose(s_config_task_ctx.file_handle);
-      // DEBUG STUB: hardcode the configuration parameters
-      config_task_nv_data_t *config = &nv_data()->config_task_nv_data;
-      strcpy(config->ssid, "pichincha");
-      strcpy(config->pass, "robandmarisol");
-      config->sleep_interval = 60;
-      strcpy(config->winc_img_filename, "winc_19_7_6.img");
-      // END OF STUB
       config_task_set_state(CONFIG_TASK_STATE_SUCCESS);
     } else {
       // read a line from the config file
       char *line = FATFS_gets(
           s_read_buf, sizeof(s_read_buf), s_config_task_ctx.file_handle);
       if (line == NULL) {
-        printf("\nError while reading config file, error %d", SYS_FS_Error());
+        YB_LOG_ERROR("Error while reading config file, error %d",
+                     SYS_FS_Error());
         config_task_set_state(CONFIG_TASK_STATE_ERROR);
         // TODO:
         // } else if (parse_config_line(s_read_buf) == false) {
@@ -145,7 +157,9 @@ void config_task_step(void) {
         //   printf( "\nError while parsing config
         //   file"); endgame(CONFIG_TASK_STATE_ERROR);
       } else {
-        // stay in this state to read and parse more lines
+        // parse line and remain in this state to parse more lines.
+        // Be permissive: ignore parse errors.
+        mu_cfg_parser_read_line(&s_config_task_ctx.parser, line);
       }
     }
   } break;
@@ -172,22 +186,24 @@ bool config_task_failed(void) {
 void config_task_shutdown(void) {}
 
 const char *config_task_get_wifi_ssid(void) {
-  // STUB
-  return "pichincha";
+  return nv_data().config_task_nv_data.wifi_ssid;
 }
 
 const char *config_task_get_wifi_pass(void) {
-  // STUB
-  return "robandmarisol";
+  return nv_data().config_task_nv_data.wifi_pass;
 }
 
-yb_rtc_ms_t config_task_get_wake_interval_ms(void) { return 20000.0; }
+yb_rtc_ms_t config_task_get_wake_interval_ms(void) {
+  return nv_data().config_task_nv_data.wake_interval_ms;
+}
+
+yb_rtc_ms_t config_task_get_timeout_ms(void) {
+  return nv_data().config_task_nv_data.timeout_ms;
+}
 
 const char *config_task_get_winc_image_filename(void) {
-  return NULL; // "winc_19_7_6.img";
+  return s_config_task_ctx.winc_image;
 }
-
-yb_rtc_ms_t config_task_get_timeout_ms(void) { return 15000.0; }
 
 // *****************************************************************************
 // Local (private, static) code
@@ -203,4 +219,21 @@ static void config_task_set_state(config_task_state_t new_state) {
 
 static const char *config_task_state_name(config_task_state_t state) {
   return config_task_state_names[state];
+}
+
+static void token_parser(mu_str_t *value, const void *arg) {
+  config_task_nv_data_t *nv = &nv_data().config_task_nv_data;
+  YB_LOG_INFO("cfg parse: key='%s', value='%s'", (char *)arg, value);
+
+  if (strcmp((char *)arg, "wifi_ssid") == 0) {
+    strncpy(&nv.wifi_ssid, value, MAX_CONFIG_VALUE_LENGTH);
+  } else if (strcmp((char *)arg, "wifi_pass") == 0) {
+    strncpy(&nv.wifi_pass, value, MAX_CONFIG_VALUE_LENGTH);
+  } else if (strcmp((char *)arg, "wake_interval_ms") == 0) {
+    nv.wake_interval_ms = atof(value);
+  } else if (strcmp((char *)arg, "timeout_ms") == 0) {
+    nv.timeout_ms = atof(value);
+  } else if (strcmp((char *)arg, "winc_image") == 0) {
+    strncpy(&s_config_task_ctx.winc_image, value, MAX_CONFIG_VALUE_LENGTH);
+  }
 }

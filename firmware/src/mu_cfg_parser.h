@@ -1,9 +1,7 @@
 /**
- * @file config_task.h
- *
  * MIT License
  *
- * Copyright (c) 2022 Klatu Networks
+ * Copyright (c) 2021-2022 R. D. Poor <rdpoor@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,21 +20,33 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ */
+
+/**
+ * @file mu_cfg_parser.h
+ *
+ * @brief Parse "config.txt-like" formatted key-value pairs.  For example:
+ *
+ * key1=value1
+ * key2 = value2
+ *   key3 = value3
+ * key4 = value4    # a hashtag introduces a comment to the end of line
+ * # lines with no key-value pairs are allowed.
  *
  */
 
-#ifndef _CONFIG_TASK_H_
-#define _CONFIG_TASK_H_
+#ifndef _MU_CFG_PARSER_H_
+#define _MU_CFG_PARSER_H_
 
 // *****************************************************************************
 // Includes
 
-#include "yb_rtc.h"
+#include "mu_strbuf.h"
+#include "mu_str.h"
 #include <stdbool.h>
-#include <stdint.h>
 
-// =============================================================================
-// C++ compatibility
+// *****************************************************************************
+// C++ Compatibility
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,60 +55,35 @@ extern "C" {
 // *****************************************************************************
 // Public types and definitions
 
-#define MAX_CONFIG_KEY_LENGTH 20
-#define MAX_CONFIG_VALUE_LENGTH 40
-#define MAX_CONFIG_LINE_LENGTH (MAX_CONFIG_KEY_LENGTH + MAX_CONFIG_VALUE_LENGTH)
+typedef enum {
+    MU_CFG_PARSER_ERR_NONE,
+    MU_CFG_PARSER_ERR_BAD_FMT,
+} mu_cfg_parser_err_t;
 
-/**
- * @brief Results of parsing the config.txt file are stored here.
- *
- * In turn, this struct will be saved in nv ram (backup ram) so it is preserved
- * across reboots.
- */
+typedef void (*mu_cfg_on_match_fn)(mu_str_t *key, mu_str_t *value);
+
 typedef struct {
-  char wifi_ssid[MAX_CONFIG_VALUE_LENGTH];
-  char wifi_pass[MAX_CONFIG_VALUE_LENGTH];
-  yb_rtc_ms_t wake_interval_ms;
-  yb_rtc_ms_t timeout_ms;
-} config_task_nv_data_t;
+    mu_strbuf_t buf;
+    mu_str_t key;
+    mu_str_t value;
+    mu_cfg_on_match_fn on_match;
+} mu_cfg_parser_t;
 
 // *****************************************************************************
 // Public declarations
 
-/**
- * @brief Initialize the config_task.
- *
- * If on_completion is non-null, it specifies a function to call when the
- * config_task completes (either successfully or on failure).
- */
-void config_task_init(const char *filename);
+mu_cfg_parser_t *mu_cfg_parser_init(mu_cfg_parser_t *parser,
+                                    mu_cfg_on_match_fn on_match);
 
-/**
- * @brief Advance the config_task state machine.
- */
-void config_task_step(void);
+mu_cfg_parser_err_t mu_cfg_parser_read_line(mu_cfg_parser_t *parser,
+                                            const char *line);
 
-bool config_task_succeeded(void);
 
-bool config_task_failed(void);
-
-/**
- * @brief Release any resources allocated by config_task.
- */
-void config_task_shutdown(void);
-
-const char *config_task_get_wifi_ssid(void);
-
-const char *config_task_get_wifi_pass(void);
-
-yb_rtc_ms_t config_task_get_wake_interval_ms(void);
-
-yb_rtc_ms_t config_task_get_timeout_ms(void);
-
-const char *config_task_get_winc_image_filename(void);
+// *****************************************************************************
+// End of file
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* #ifndef __H_ */
+#endif /* #ifndef _MU_CFG_PARSER_H_ */

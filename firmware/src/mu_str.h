@@ -34,15 +34,18 @@ extern "C" {
 
 #include "mu_strbuf.h"
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 // =============================================================================
 // Types and definitions
 
+#define MU_STR_NOT_FOUND SIZE_MAX
+
 typedef struct {
-  mu_strbuf_t *buf; // reference to underlying buffer
-  size_t s;          // index of next byte to be read, or start of string
-  size_t e;          // index of next byte to be written, or end of string
+  const mu_strbuf_t *buf; // reference to underlying buffer
+  size_t s;               // index of next byte to be read, or start of string
+  size_t e;               // index of next byte to be written, or end of string
 } mu_str_t;
 
 // =============================================================================
@@ -55,9 +58,9 @@ typedef struct {
  * @param buf The underlying mu_str_buf
  * @return str
  */
-mu_str_t *mu_str_init_ro(mu_str_t *str, mu_strbuf_t *buf);
+mu_str_t *mu_str_init_rd(mu_str_t *str, const mu_strbuf_t *buf);
 
-mu_str_t *mu_str_init_rw(mu_str_t *str, mu_strbuf_t *buf);
+mu_str_t *mu_str_init_wr(mu_str_t *str, const mu_strbuf_t *buf);
 
 /**
  * @brief Reset start and end pointers for a read buffer
@@ -67,7 +70,7 @@ mu_str_t *mu_str_init_rw(mu_str_t *str, mu_strbuf_t *buf);
  * @param str A mu_str
  * @return str
  */
-mu_str_t *mu_str_reset_ro(mu_str_t *str);
+mu_str_t *mu_str_reset_rd(mu_str_t *str);
 
 /**
 * @brief Reset start and end pointers for a write buffer
@@ -77,8 +80,7 @@ mu_str_t *mu_str_reset_ro(mu_str_t *str);
 * @param str A mu_str
 * @return str
  */
-mu_str_t *mu_str_reset_rw(mu_str_t *str);
-
+mu_str_t *mu_str_reset_wr(mu_str_t *str);
 
 /**
  * @brief Make a shallow copy of a mu_str
@@ -96,10 +98,11 @@ mu_str_t *mu_str_copy(mu_str_t *dst, const mu_str_t *src);
  *
  * @param str the mu_str
  * @param byte the byte to search for.
- * @return the index of the byte, relative to the str start index, or -1 if
- *         if the byte was not found between the start and end of str.
+ * @return the index of the byte, relative to the str start index, or
+ *         MU_STR_NOT_FOUND if if the byte was not found between the
+ *         start and end of str.
  */
-int mu_str_index(mu_str_t *str, uint8_t byte);
+size_t mu_str_index(mu_str_t *str, uint8_t byte);
 
 /**
  * @brief Make a slice of a mu_str
@@ -119,7 +122,7 @@ int mu_str_index(mu_str_t *str, uint8_t byte);
  * Notes:
  * * The resulting dst is always equal to or shorter than the src
  * * mu_str_slice manipulates indeces; it does not move any data bytes.
- * * dst and src may pointe to the same object.
+ * * dst and src may point to the same object.
  *
  * @param dst The ref to be modified
  * @param src The ref from which to take a slice
@@ -129,14 +132,13 @@ int mu_str_index(mu_str_t *str, uint8_t byte);
  */
 mu_str_t *mu_str_slice(mu_str_t *dst, const mu_str_t *src, int start, int end);
 
-
 /**
  * @brief Return the number of bytes available for reading.
  *
  * @param str A mu_str
  * @return The number of bytes available for reading, i.e. e-s
  */
-size_t mu_str_available_ro(const mu_str_t *str);
+size_t mu_str_available_rd(const mu_str_t *str);
 
 /**
  * @brief Return the number of bytes available for writing.
@@ -144,7 +146,7 @@ size_t mu_str_available_ro(const mu_str_t *str);
  * @param str A mu_str
  * @return The number of bytes available for writing, i.e. capacity - e
  */
-size_t mu_str_available_rw(const mu_str_t *str);
+size_t mu_str_available_wr(const mu_str_t *str);
 
 /**
  * @brief Advance the start index of a mu_str
@@ -178,7 +180,7 @@ size_t mu_str_increment_end(mu_str_t *str, size_t n_bytes);
  * @param str The mu_str
  * @return A pointer to the start of the underlying string
  */
-const uint8_t *mu_str_ref_ro(const mu_str_t *str);
+const uint8_t *mu_str_ref_rd(const mu_str_t *str);
 
 /**
  * @brief Return a pointer to the end of the underlyng string.
@@ -186,7 +188,7 @@ const uint8_t *mu_str_ref_ro(const mu_str_t *str);
  * @param str The mu_str
  * @return A pointer to the end of the underlying string
  */
-uint8_t *mu_str_ref_rw(const mu_str_t *str);
+uint8_t *mu_str_ref_wr(const mu_str_t *str);
 
 /**
  * @brief Read one byte from the underlying string.  Return it by reference.
@@ -260,29 +262,38 @@ size_t mu_str_to_cstr(const mu_str_t *src, char *cstr, size_t len);
  * @param str1 The first mu_str to compare
  * @param str2 The second mu_str to compare
  * @param n The maximum number of characters to compare
- * @return returning less than, equal to or greater than zero if str1 is lexicographically less than, equal to or greater than str2.
+ * @return returning less than, equal to or greater than zero if str1 is
+ * lexicographically less than, equal to or greater than str2.
  */
 int mu_str_strncmp(mu_str_t *str1, mu_str_t *str2, size_t len);
 
 /**
- * @brief Compare str1 and str2, using the c lib function strncmp(), passing in the length of the shorter of the two strings
+ * @brief Compare str1 and str2, using the c lib function strncmp(), passing in
+ * the length of the shorter of the two strings
  * *
  * @param str1 The first mu_str to compare
  * @param str2 The second mu_str to compare
- * @return returning less than, equal to or greater than zero if str1 is lexicographically less than, equal to or greater than str2.
+ * @return returning less than, equal to or greater than zero if str1 is
+ * lexicographically less than, equal to or greater than str2.
  */
 int mu_str_strcmp(mu_str_t *str1, mu_str_t *str2);
 
 /**
  * @brief Search for C-style string in a mu_str.
  *
- * Note: The search begins at the current start index of the mu_str and leaves it unmolested.
+ * Note: The search begins at the current start index of the mu_str and leaves
+ * it unmolested.
  *
  * @param src The mu_str to search
  * @param cstr A pointer to the C-style string to look for
- * @return The offset index from str->s at which the cstr begins, -1 if not found, 0 if cstr is empty
+ * @return The offset index from str->s at which the cstr begins, -1 if not
+ * found, 0 if cstr is empty
  */
 int mu_str_find(mu_str_t *str, char *substring);
+
+mu_str_t *mu_str_trim_left(mu_str_t *str, bool (*predicate)(char ch));
+mu_str_t *mu_str_trim_right(mu_str_t *str, bool (*predicate)(char ch));
+mu_str_t *mu_str_trim(mu_str_t *str, bool (*predicate)(char ch));
 
 // TBD:
 // mu_str_equals -- mu_str_cmp() == 0
