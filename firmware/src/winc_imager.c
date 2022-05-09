@@ -3,7 +3,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -138,17 +138,14 @@ void winc_imager_step(void) {
     if (SYS_FS_FileStat(s_winc_imager_ctx.filename, &stat_buf) !=
         SYS_FS_RES_SUCCESS) {
       // fstat failed.
-      printf(
-                      "\nUnable to determine size of %s",
-                      s_winc_imager_ctx.filename);
+      printf("\nUnable to determine size of %s", s_winc_imager_ctx.filename);
       endgame(WINC_IMAGER_STATE_ERROR);
     } else if (stat_buf.fsize != WINC_IMAGE_SIZE) {
       // File size doesn't match WINC image size
-      printf(
-                      "\nExpected %s to be %ld bytes, but found %ld",
-                      s_winc_imager_ctx.filename,
-                      WINC_IMAGE_SIZE,
-                      stat_buf.fsize);
+      printf("\nExpected %s to be %ld bytes, but found %ld",
+             s_winc_imager_ctx.filename,
+             WINC_IMAGE_SIZE,
+             stat_buf.fsize);
       endgame(WINC_IMAGER_STATE_ERROR);
     } else {
       // File looks like a WINC image.
@@ -161,30 +158,24 @@ void winc_imager_step(void) {
     s_winc_imager_ctx.file_handle =
         SYS_FS_FileOpen(s_winc_imager_ctx.filename, SYS_FS_FILE_OPEN_READ);
     if (s_winc_imager_ctx.file_handle != SYS_FS_HANDLE_INVALID) {
-      printf(
-                      "\nComparing image file %s against WINC contents ",
-                      s_winc_imager_ctx.filename);
+      printf("\nComparing image file %s against WINC contents ",
+             s_winc_imager_ctx.filename);
       s_winc_imager_ctx.sector = 0;
       winc_imager_set_state(WINC_IMAGER_STATE_COMPARING_SECTORS);
     } else {
-      printf(
-                      "\nUnable to open image file %s",
-                      s_winc_imager_ctx.filename);
+      printf("\nUnable to open image file %s", s_winc_imager_ctx.filename);
       endgame(WINC_IMAGER_STATE_ERROR);
     }
   } break;
 
   case WINC_IMAGER_STATE_COMPARING_SECTORS: {
     if (s_winc_imager_ctx.sector == WINC_SECTOR_COUNT) {
-      printf(
-                      "\nWINC firmware matches %s",
-                       s_winc_imager_ctx.filename);
+      printf("\nWINC firmware matches %s", s_winc_imager_ctx.filename);
       winc_imager_set_state(WINC_IMAGER_STATE_CLOSING_RESOURCES);
     } else {
-      printf(
-                      "\nComparing sector %d out of %d",
-                      s_winc_imager_ctx.sector,
-                      WINC_SECTOR_COUNT);
+      printf("\nComparing sector %d out of %d",
+             s_winc_imager_ctx.sector,
+             WINC_SECTOR_COUNT);
       winc_imager_set_state(WINC_IMAGER_STATE_READING_FILE_SECTOR);
     }
   } break;
@@ -195,16 +186,13 @@ void winc_imager_step(void) {
     if (n_read == FLASH_SECTOR_SZ) {
       winc_imager_set_state(WINC_IMAGER_STATE_READING_WINC_SECTOR);
     } else if (n_read == -1) {
-      printf(
-                      "\nReading image file %s failed",
-                      s_winc_imager_ctx.filename);
+      printf("\nReading image file %s failed", s_winc_imager_ctx.filename);
       endgame(WINC_IMAGER_STATE_ERROR);
     } else {
-      printf(
-                      "\nRead %u bytes from %s, expected %ld",
-                      n_read,
-                      s_winc_imager_ctx.filename,
-                      FLASH_SECTOR_SZ);
+      printf("\nRead %u bytes from %s, expected %ld",
+             n_read,
+             s_winc_imager_ctx.filename,
+             FLASH_SECTOR_SZ);
       endgame(WINC_IMAGER_STATE_ERROR);
     }
   } break;
@@ -217,10 +205,9 @@ void winc_imager_step(void) {
                           FLASH_SECTOR_SZ) == WDRV_WINC_STATUS_OK) {
       winc_imager_set_state(WINC_IMAGER_STATE_COMPARING_BUFFERS);
     } else {
-      printf(
-                      "\nFailed to read %ld bytes from %s",
-                      FLASH_SECTOR_SZ,
-                      s_winc_imager_ctx.filename);
+      printf("\nFailed to read %ld bytes from %s",
+             FLASH_SECTOR_SZ,
+             s_winc_imager_ctx.filename);
     }
   } break;
 
@@ -234,7 +221,7 @@ void winc_imager_step(void) {
     }
     if (!buffers_differ) {
       // buffers match - advance to next sector
-      printf( ".");
+      printf(".");
       winc_imager_set_state(WINC_IMAGER_STATE_INCREMENT_WRITE_SECTOR);
     } else {
       // buffers differ - erase and overwrite this sector
@@ -244,18 +231,15 @@ void winc_imager_step(void) {
 
   case WINC_IMAGER_STATE_ERASING_WINC_SECTOR: {
     // Erase sector in preparation for overwriting
-    printf( "!");
+    printf("!");
     if (WDRV_WINC_NVMEraseSector(s_winc_imager_ctx.winc_handle,
                                  WDRV_WINC_NVM_REGION_RAW,
                                  s_winc_imager_ctx.sector,
                                  1) == WDRV_WINC_STATUS_OK) {
-      printf(
-          "\nErased sector %d", s_winc_imager_ctx.sector);
+      printf("\nErased sector %d", s_winc_imager_ctx.sector);
       winc_imager_set_state(WINC_IMAGER_STATE_WRITING_WINC_SECTOR);
     } else {
-      printf(
-                      "\nErasing sector %d failed",
-                      s_winc_imager_ctx.sector);
+      printf("\nErasing sector %d failed", s_winc_imager_ctx.sector);
       endgame(WINC_IMAGER_STATE_ERROR);
     }
   } break;
@@ -267,13 +251,10 @@ void winc_imager_step(void) {
                            s_file_buffer,
                            SECTOR_TO_OFFSET(s_winc_imager_ctx.sector),
                            FLASH_SECTOR_SZ) == WDRV_WINC_STATUS_OK) {
-      printf(
-          "\nWrote sector %d", s_winc_imager_ctx.sector);
+      printf("\nWrote sector %d", s_winc_imager_ctx.sector);
       winc_imager_set_state(WINC_IMAGER_STATE_INCREMENT_WRITE_SECTOR);
     } else {
-      printf(
-                      "\nWriting sector %d failed",
-                      s_winc_imager_ctx.sector);
+      printf("\nWriting sector %d failed", s_winc_imager_ctx.sector);
       endgame(WINC_IMAGER_STATE_ERROR);
     }
   } break;

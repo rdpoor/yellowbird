@@ -3,7 +3,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,8 +28,8 @@
 // *****************************************************************************
 // Includes
 
-#include "configuration.h"   // BKUPRAM_ADDR
 #include "nv_data.h"
+#include "configuration.h" // BKUPRAM_ADDR
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -47,13 +47,9 @@
 // *****************************************************************************
 // Public code
 
-nv_data_t *nv_data(void) {
-  return (nv_data_t *)BKUPRAM_ADDR;
-}
+nv_data_t *nv_data(void) { return (nv_data_t *)BKUPRAM_ADDR; }
 
-void nv_data_clear(void) {
-  memset(nv_data(), 0, sizeof(nv_data_t));
-}
+void nv_data_clear(void) { memset(nv_data(), 0, sizeof(nv_data_t)); }
 
 // *****************************************************************************
 // Local (private, static) code

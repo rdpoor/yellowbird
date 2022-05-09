@@ -3,7 +3,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +37,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <strings.h>
+// #include <strings.h>
 #include <stdio.h>
 
 // *****************************************************************************
@@ -100,9 +100,7 @@ void config_task_step(void) {
   case CONFIG_TASK_SETTING_DRIVE: {
     // Set current drive so that we do not have to use absolute path.
     if (SYS_FS_CurrentDriveSet(SD_MOUNT_NAME) == SYS_FS_RES_FAILURE) {
-      printf(
-                      "\nUnable to select drive, error %d",
-                      SYS_FS_Error());
+      printf("\nUnable to select drive, error %d", SYS_FS_Error());
       config_task_set_state(CONFIG_TASK_STATE_ERROR);
     } else {
       config_task_set_state(CONFIG_TASK_STATE_OPENING_CONFIG);
@@ -114,9 +112,7 @@ void config_task_step(void) {
     s_config_task_ctx.file_handle =
         SYS_FS_FileOpen(s_config_task_ctx.file_name, SYS_FS_FILE_OPEN_READ);
     if (s_config_task_ctx.file_handle == SYS_FS_HANDLE_INVALID) {
-      printf(
-                      "\nUnable to open config file, error %d",
-                      SYS_FS_Error());
+      printf("\nUnable to open config file, error %d", SYS_FS_Error());
       config_task_set_state(CONFIG_TASK_STATE_ERROR);
     } else {
       config_task_set_state(CONFIG_TASK_STATE_READING_CONFIG);
@@ -141,9 +137,7 @@ void config_task_step(void) {
       char *line = FATFS_gets(
           s_read_buf, sizeof(s_read_buf), s_config_task_ctx.file_handle);
       if (line == NULL) {
-        printf(
-                        "\nError while reading config file, error %d",
-                        SYS_FS_Error());
+        printf("\nError while reading config file, error %d", SYS_FS_Error());
         config_task_set_state(CONFIG_TASK_STATE_ERROR);
         // TODO:
         // } else if (parse_config_line(s_read_buf) == false) {
@@ -175,9 +169,7 @@ bool config_task_failed(void) {
   return s_config_task_ctx.state == CONFIG_TASK_STATE_ERROR;
 }
 
-void config_task_shutdown(void) {
-
-}
+void config_task_shutdown(void) {}
 
 const char *config_task_get_wifi_ssid(void) {
   // STUB
@@ -189,24 +181,22 @@ const char *config_task_get_wifi_pass(void) {
   return "robandmarisol";
 }
 
-yb_rtc_ms_t config_task_get_wake_interval_ms(void) {
-  return 20000.0;
-}
+yb_rtc_ms_t config_task_get_wake_interval_ms(void) { return 20000.0; }
 
 const char *config_task_get_winc_image_filename(void) {
   return NULL; // "winc_19_7_6.img";
 }
 
-yb_rtc_ms_t config_task_get_timeout_ms(void) {
-  return 15.0;
-}
+yb_rtc_ms_t config_task_get_timeout_ms(void) { return 15000.0; }
 
 // *****************************************************************************
 // Local (private, static) code
 
 static void config_task_set_state(config_task_state_t new_state) {
-    if (new_state != s_config_task_ctx.state) {
-    YB_LOG_INFO("%s => %s", config_task_state_name(s_config_task_ctx.state), config_task_state_name(new_state));
+  if (new_state != s_config_task_ctx.state) {
+    YB_LOG_INFO("%s => %s",
+                config_task_state_name(s_config_task_ctx.state),
+                config_task_state_name(new_state));
     s_config_task_ctx.state = new_state;
   }
 }

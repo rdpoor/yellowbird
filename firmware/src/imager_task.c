@@ -3,7 +3,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -90,7 +90,7 @@ static uint8_t CACHE_ALIGN s_file_buffer[FLASH_SECTOR_SZ];
 static uint8_t CACHE_ALIGN s_winc_buffer[FLASH_SECTOR_SZ];
 
 #define EXPAND_NAME(_name) #_name,
-static const char *s_imager_task_state_names[] = { STATES(EXPAND_NAME) };
+static const char *s_imager_task_state_names[] = {STATES(EXPAND_NAME)};
 
 // *****************************************************************************
 // Public code
@@ -128,14 +128,14 @@ void imager_task_step(void) {
         SYS_FS_RES_SUCCESS) {
       // fstat failed.
       YB_LOG_ERROR("Unable to determine size of %s",
-                      s_imager_task_ctx.filename);
+                   s_imager_task_ctx.filename);
       imager_task_set_state(IMAGER_TASK_STATE_ERROR);
     } else if (stat_buf.fsize != WINC_IMAGE_SIZE) {
       // File size doesn't match WINC image size
       YB_LOG_ERROR("Expected %s to be %ld bytes, but found %ld",
-                      s_imager_task_ctx.filename,
-                      WINC_IMAGE_SIZE,
-                      stat_buf.fsize);
+                   s_imager_task_ctx.filename,
+                   WINC_IMAGE_SIZE,
+                   stat_buf.fsize);
       imager_task_set_state(IMAGER_TASK_STATE_ERROR);
     } else {
       // File looks like a WINC image.
@@ -149,25 +149,23 @@ void imager_task_step(void) {
         SYS_FS_FileOpen(s_imager_task_ctx.filename, SYS_FS_FILE_OPEN_READ);
     if (s_imager_task_ctx.file_handle != SYS_FS_HANDLE_INVALID) {
       YB_LOG_INFO("Comparing image file %s against WINC contents ",
-                      s_imager_task_ctx.filename);
+                  s_imager_task_ctx.filename);
       s_imager_task_ctx.sector = 0;
       imager_task_set_state(IMAGER_TASK_STATE_COMPARING_SECTORS);
     } else {
-      YB_LOG_ERROR("Unable to open image file %s",
-                      s_imager_task_ctx.filename);
+      YB_LOG_ERROR("Unable to open image file %s", s_imager_task_ctx.filename);
       imager_task_set_state(IMAGER_TASK_STATE_ERROR);
     }
   } break;
 
   case IMAGER_TASK_STATE_COMPARING_SECTORS: {
     if (s_imager_task_ctx.sector == WINC_SECTOR_COUNT) {
-      YB_LOG_INFO("WINC firmware matches %s",
-                       s_imager_task_ctx.filename);
+      YB_LOG_INFO("WINC firmware matches %s", s_imager_task_ctx.filename);
       imager_task_set_state(IMAGER_TASK_STATE_CLOSING_RESOURCES);
     } else {
       YB_LOG_DEBUG("Comparing sector %d out of %d",
-                      s_imager_task_ctx.sector,
-                      WINC_SECTOR_COUNT);
+                   s_imager_task_ctx.sector,
+                   WINC_SECTOR_COUNT);
       imager_task_set_state(IMAGER_TASK_STATE_READING_FILE_SECTOR);
     }
   } break;
@@ -178,14 +176,13 @@ void imager_task_step(void) {
     if (n_read == FLASH_SECTOR_SZ) {
       imager_task_set_state(IMAGER_TASK_STATE_READING_WINC_SECTOR);
     } else if (n_read == -1) {
-      YB_LOG_ERROR("Reading image file %s failed",
-                      s_imager_task_ctx.filename);
+      YB_LOG_ERROR("Reading image file %s failed", s_imager_task_ctx.filename);
       imager_task_set_state(IMAGER_TASK_STATE_ERROR);
     } else {
       YB_LOG_ERROR("Read %ld bytes from %s, expected %ld",
-                      n_read,
-                      s_imager_task_ctx.filename,
-                      FLASH_SECTOR_SZ);
+                   n_read,
+                   s_imager_task_ctx.filename,
+                   FLASH_SECTOR_SZ);
       imager_task_set_state(IMAGER_TASK_STATE_ERROR);
     }
   } break;
@@ -199,8 +196,8 @@ void imager_task_step(void) {
       imager_task_set_state(IMAGER_TASK_STATE_COMPARING_BUFFERS);
     } else {
       YB_LOG_ERROR("Failed to read %ld bytes from %s",
-                      FLASH_SECTOR_SZ,
-                      s_imager_task_ctx.filename);
+                   FLASH_SECTOR_SZ,
+                   s_imager_task_ctx.filename);
     }
   } break;
 
@@ -232,8 +229,7 @@ void imager_task_step(void) {
       YB_LOG_DEBUG("Erased sector %d", s_imager_task_ctx.sector);
       imager_task_set_state(IMAGER_TASK_STATE_WRITING_WINC_SECTOR);
     } else {
-      YB_LOG_ERROR("Erasing sector %s failed",
-                      s_imager_task_ctx.sector);
+      YB_LOG_ERROR("Erasing sector %s failed", s_imager_task_ctx.sector);
       imager_task_set_state(IMAGER_TASK_STATE_ERROR);
     }
   } break;
@@ -248,8 +244,7 @@ void imager_task_step(void) {
       YB_LOG_DEBUG("Wrote sector %d", s_imager_task_ctx.sector);
       imager_task_set_state(IMAGER_TASK_STATE_INCREMENT_WRITE_SECTOR);
     } else {
-      YB_LOG_ERROR("Writing sector %s failed",
-                      s_imager_task_ctx.sector);
+      YB_LOG_ERROR("Writing sector %s failed", s_imager_task_ctx.sector);
       imager_task_set_state(IMAGER_TASK_STATE_ERROR);
     }
   } break;
@@ -284,9 +279,7 @@ bool imager_task_failed(void) {
   return s_imager_task_ctx.state == IMAGER_TASK_STATE_ERROR;
 }
 
-void imager_task_shutdown(void) {
-  cleanup();
-}
+void imager_task_shutdown(void) { cleanup(); }
 
 // *****************************************************************************
 // Local (private, static) code
@@ -305,6 +298,14 @@ static const char *imager_task_state_name(imager_task_state_t state) {
 }
 
 static void cleanup(void) {
-  WDRV_WINC_Close(s_imager_task_ctx.winc_handle);
-  SYS_FS_FileClose(s_imager_task_ctx.file_handle);
+  if (s_imager_task_ctx.winc_handle != 0) {
+    // TODO: is 0 a valid file handle?  If so, allocate a flag to know if we
+    // need to call Close
+    WDRV_WINC_Close(s_imager_task_ctx.winc_handle);
+  }
+  if (s_imager_task_ctx.file_handle != 0) {
+    // TODO: is 0 a valid file handle?  If so, allocate a flag to know if we
+    // need to call Close
+    SYS_FS_FileClose(s_imager_task_ctx.file_handle);
+  }
 }

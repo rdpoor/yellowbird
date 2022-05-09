@@ -3,7 +3,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -83,8 +83,8 @@ bool config_task_succeeded(void);
 bool config_task_failed(void);
 
 /**
-* @brief Release any resources allocated by config_task.
-*/
+ * @brief Release any resources allocated by config_task.
+ */
 void config_task_shutdown(void);
 
 const char *config_task_get_wifi_ssid(void);

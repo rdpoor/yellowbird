@@ -3,7 +3,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,8 +58,6 @@ bool imager_task_failed(void);
  * @brief Release any resources allocated by imager_task.
  */
 void imager_task_shutdown(void);
-
-
 
 #ifdef __cplusplus
 }

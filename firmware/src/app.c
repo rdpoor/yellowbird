@@ -139,6 +139,7 @@ void APP_Tasks(void) {
           config_task_get_timeout_ms()) {
     // timed out before completing HTTP exchange
     app_set_state(APP_STATE_TIMED_OUT);
+    s_app_ctx.timeout_is_active = false; // once is enough...
   }
 
   switch (s_app_ctx.state) {
@@ -304,13 +305,13 @@ mu_strbuf_t *app_request_msg() { return &s_request_msg; }
 
 mu_strbuf_t *app_response_msg() { return &s_response_msg; }
 
-
 // *****************************************************************************
 // Local (private, static) code
 
 static void app_set_state(app_state_t new_state) {
   if (new_state != s_app_ctx.state) {
-    YB_LOG_INFO("%s => %s", app_state_name(s_app_ctx.state), app_state_name(new_state));
+    YB_LOG_INFO(
+        "%s => %s", app_state_name(s_app_ctx.state), app_state_name(new_state));
     s_app_ctx.state = new_state;
   }
 }

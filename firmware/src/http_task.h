@@ -3,7 +3,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -69,13 +69,13 @@ extern "C" {
  * @param rsp_length The length of the rsp_buf.  If the response exceeds this
  *        limit, it will be truncated.
  */
- void http_task_init(DRV_HANDLE winc_handle,
-                     const char *host_name,
-                     const char *host_ipv4,
-                     uint16_t host_port,
-                     bool use_tls,
-                     mu_strbuf_t *request_msg,
-                     mu_strbuf_t *response_msg);
+void http_task_init(DRV_HANDLE winc_handle,
+                    const char *host_name,
+                    const char *host_ipv4,
+                    uint16_t host_port,
+                    bool use_tls,
+                    mu_strbuf_t *request_msg,
+                    mu_strbuf_t *response_msg);
 
 /**
  * @brief Advance the http_task state machine.

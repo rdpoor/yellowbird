@@ -3,7 +3,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,8 +32,8 @@
 // Includes
 
 #include "definitions.h"
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 // =============================================================================
 // C++ compatibility
@@ -57,7 +57,7 @@ void winc_task_connect(const char *ssid, const char *pass);
  * @brief Start the disconnect sequence.
  */
 void winc_task_disconnect(void);
- 
+
 /**
  * @brief Advance the winc_task state machine
  */

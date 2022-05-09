@@ -33,8 +33,8 @@
 
 #include "mu_strbuf.h"
 #include "yb_rtc.h"
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 // =============================================================================
 // C++ compatibility
@@ -47,17 +47,19 @@ extern "C" {
 // Public types and definitions
 
 #define APP_HOST_NAME "example.com"
-#define APP_HOST_IP_ADDR NULL        // use APP_HOST_NAME
-#define APP_HOST_PORT 443            // https
-#define APP_HOST_USE_TLS true
+#define APP_HOST_IP_ADDR NULL // use APP_HOST_NAME
+// #define APP_HOST_USE_TLS true
+// #define APP_HOST_PORT 443
+#define APP_HOST_USE_TLS false
+#define APP_HOST_PORT 80
 
 /**
  * @brief Data that is preserved across reboots.
  */
 typedef struct {
-  uint32_t reboot_count;   // # of times system rebooted
-  uint32_t success_count;  // # of times app completed HTTP exchange
-  yb_rtc_tics_t wake_at;   // RTC time at which app woke up
+  uint32_t reboot_count;  // # of times system rebooted
+  uint32_t success_count; // # of times app completed HTTP exchange
+  yb_rtc_tics_t wake_at;  // RTC time at which app woke up
 } app_nv_data_t;
 
 // *****************************************************************************

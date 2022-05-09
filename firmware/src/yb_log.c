@@ -40,8 +40,8 @@
 // *****************************************************************************
 // Local (private, static) storage
 
-#define EXPAND_LEVEL_NAMES(_enum_id, _name) #_name,
-static const char *s_level_names[] = { YB_LOG_LEVELS(EXPAND_LEVEL_NAMES) };
+#define EXPAND_LEVEL_NAMES(_enum_id, _name) _name,
+static const char *s_level_names[] = {YB_LOG_LEVELS(EXPAND_LEVEL_NAMES)};
 
 static yb_log_level_t s_reporting_level;
 
@@ -53,9 +53,7 @@ static const char *get_level_name(yb_log_level_t level);
 // *****************************************************************************
 // Public code
 
-void yb_log_init(void) {
-  yb_log_set_reporting_level(YB_LOG_LEVEL_INFO);
-}
+void yb_log_init(void) { yb_log_set_reporting_level(YB_LOG_LEVEL_INFO); }
 
 void yb_log_set_reporting_level(yb_log_level_t reporting_level) {
   s_reporting_level = reporting_level;
@@ -65,8 +63,11 @@ void yb_log(yb_log_level_t level, const char *fmt, ...) {
   if (level >= s_reporting_level) {
     va_list ap;
     const char *s = get_level_name(level);
-
-    printf("\n%8.2f [%s] ", app_uptime_ms(), s);
+    // printf("%f", ...) hard faults?!?
+    // yb_rtc_ms_t t = app_uptime_ms();
+    // printf("\n%f [%s] ", t, s);
+    int ms = app_uptime_ms();
+    printf("\n%08d [%s] ", ms, s);
     va_start(ap, fmt);
     vprintf(fmt, ap);
     va_end(ap);

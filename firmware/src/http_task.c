@@ -3,7 +3,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -153,7 +153,8 @@ void http_task_step(void) {
   case HTTP_TASK_STATE_START_SOCKET: {
     const char *err = NULL;
     do {
-      s_http_task_ctx.client_socket = socket(AF_INET, SOCK_STREAM, 0);
+      uint8_t flags = s_http_task_ctx.use_tls ? SOCKET_CONFIG_SSL_ON : 0;
+      s_http_task_ctx.client_socket = socket(AF_INET, SOCK_STREAM, flags);
       if (s_http_task_ctx.client_socket < 0) {
         err = "Unable to open a socket";
         break;
@@ -195,6 +196,9 @@ void http_task_step(void) {
          (void *)mu_strbuf_rdata(s_http_task_ctx.request_msg),
          mu_strbuf_capacity(s_http_task_ctx.request_msg),
          0);
+    YB_LOG_INFO("Sending\n==>>>\n%*s==>>>",
+                mu_strbuf_capacity(s_http_task_ctx.request_msg),
+                mu_strbuf_rdata(s_http_task_ctx.request_msg));
     http_task_set_state(HTTP_TASK_STATE_AWAIT_SEND);
   } break;
 
@@ -237,7 +241,9 @@ void http_task_shutdown(void) {
 
 static void http_task_set_state(http_task_state_t new_state) {
   if (new_state != s_http_task_ctx.state) {
-    YB_LOG_INFO("%s => %s", http_task_state_name(s_http_task_ctx.state), http_task_state_name(new_state));
+    YB_LOG_INFO("%s => %s",
+                http_task_state_name(s_http_task_ctx.state),
+                http_task_state_name(new_state));
     s_http_task_ctx.state = new_state;
   }
 }
@@ -274,8 +280,16 @@ static void http_task_socket_callback(SOCKET socket,
     // Arrive here when recv() completes
     tstrSocketRecvMsg *recv_msg = (tstrSocketRecvMsg *)msg;
     if (recv_msg != NULL && recv_msg->s16BufferSize > 0) {
-      YB_LOG_INFO("Received response:\n====\b%s====",
-                  (char *)recv_msg->pu8Buffer);
+      bool print_dots = false;
+      uint32_t to_print = recv_msg->s16BufferSize;
+      if (to_print > 300) {
+        print_dots = true;
+        recv_msg->pu8Buffer[300] = 0; // bam.  null terminate
+        to_print = 300;
+      }
+      YB_LOG_INFO("Received response:\n==<<<\n%s%s\n==<<<",
+                  (char *)recv_msg->pu8Buffer,
+                  print_dots ? "..." : "");
       http_task_set_state(HTTP_TASK_STATE_SUCCESS);
     }
 
