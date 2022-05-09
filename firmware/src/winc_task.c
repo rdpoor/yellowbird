@@ -39,41 +39,49 @@
 
 #include "http_task.h"
 #include "wdrv_winc_client_api.h"
-#include "yb_utils.h"
+#include "yb_log.h"
 #include <stdbool.h>
 #include <stdint.h>
 
 // *****************************************************************************
 // Local (private) types and definitions
 
-#define WINC_TASK_NTP_POOL_HOSTNAME "*.pool.ntp.org"
+#define STATES(M)                                                              \
+  M(WINC_TASK_STATE_INIT)                                                      \
+  M(WINC_TASK_STATE_REQ_OPEN)                                                  \
+  M(WINC_TASK_STATE_REQ_DHCP)                                                  \
+  M(WINC_TASK_STATE_CONFIGURING_STA)                                           \
+  M(WINC_TASK_STATE_START_CONNECT)                                             \
+  M(WINC_TASK_STATE_AWAIT_CONNECT)                                             \
+  M(WINC_TASK_STATE_START_HTTP_TASK)                                           \
+  M(WINC_TASK_STATE_AWAIT_HTTP_TASK)                                           \
+  M(WINC_TASK_STATE_START_DISCONNECT)                                          \
+  M(WINC_TASK_STATE_AWAIT_DISCONNECT)                                          \
+  M(WINC_TASK_STATE_SUCCESS)                                                   \
+  M(WINC_TASK_STATE_ERROR)
 
-#define EXPAND_WINC_TASK_STATES                                                \
-  DEFINE_WINC_TASK_STATE(WINC_TASK_STATE_INIT)                                 \
-  DEFINE_WINC_TASK_STATE(WINC_TASK_STATE_REQ_OPEN)                             \
-  DEFINE_WINC_TASK_STATE(WINC_TASK_STATE_REQ_DHCP)                             \
-  DEFINE_WINC_TASK_STATE(WINC_TASK_STATE_SCANNING)                             \
-  DEFINE_WINC_TASK_STATE(WINC_TASK_STATE_GETTING_SCAN_RESULTS)                 \
-  DEFINE_WINC_TASK_STATE(WINC_TASK_STATE_CONFIGURING_STA)                      \
-  DEFINE_WINC_TASK_STATE(WINC_TASK_STATE_REQ_CONNECTION)                       \
-  DEFINE_WINC_TASK_STATE(WINC_TASK_STATE_AWAITING_CONNECTION)                  \
-  DEFINE_WINC_TASK_STATE(WINC_TASK_STATE_REQ_NTP)                              \
-  DEFINE_WINC_TASK_STATE(WINC_TASK_STATE_GET_NTP)                              \
-  DEFINE_WINC_TASK_STATE(WINC_TASK_STATE_SUCCESS)                              \
-  DEFINE_WINC_TASK_STATE(WINC_TASK_STATE_ERROR)
-
-#undef DEFINE_WINC_TASK_STATE
-#define DEFINE_WINC_TASK_STATE(_name) _name,
-typedef enum { EXPAND_WINC_TASK_STATES } winc_task_state_t;
+#define EXPAND_STATE_ENUM_IDS(_name) _name,
+typedef enum { STATES(EXPAND_STATE_ENUM_IDS) } winc_task_state_t;
 
 typedef struct {
   winc_task_state_t state;
-  void (*on_completion)(void *arg);
-  void *completion_arg;
+  const char *ssid;
+  const char *pass;
   DRV_HANDLE wdrHandle;
-  uint32_t dhcpAddr;
   uint32_t timeUTC;
 } winc_task_ctx_t;
+
+// *****************************************************************************
+// Local (private, static) storage
+
+#define EXPAND_STATE_NAMES(_name) #_name,
+static const char *s_winc_task_state_names[] = {STATES(EXPAND_STATE_NAMES)};
+
+static winc_task_ctx_t s_winc_task_ctx;
+
+static WDRV_WINC_BSS_CONTEXT s_bss;
+
+static WDRV_WINC_AUTH_CONTEXT s_auth;
 
 // *****************************************************************************
 // Local (private, static) forward declarations
@@ -84,37 +92,22 @@ static const char *winc_task_state_name(winc_task_state_t state);
 
 static void winc_task_dhcp_cb(DRV_HANDLE handle, uint32_t ipAddress);
 
-static void winc_task_ntp_cb(DRV_HANDLE handle, uint32_t timeUTC);
-
 static void winc_task_wifi_notify_cb(DRV_HANDLE handle,
                                      WDRV_WINC_ASSOC_HANDLE assocHandle,
                                      WDRV_WINC_CONN_STATE currentState,
                                      WDRV_WINC_CONN_ERROR errorCode);
 
-/**
- * @brief Set the state to final_state and invoke on_completion.
- */
-static void endgame(winc_task_state_t final_state);
-
-// *****************************************************************************
-// Local (private, static) storage
-
-#undef DEFINE_WINC_TASK_STATE
-#define DEFINE_WINC_TASK_STATE(_name) #_name,
-static const char *s_winc_task_state_names[] = {EXPAND_WINC_TASK_STATES};
-static winc_task_ctx_t s_winc_task_ctx;
-static WDRV_WINC_BSS_CONTEXT bssCtx;
-static WDRV_WINC_AUTH_CONTEXT authCtx;
-
 // *****************************************************************************
 // Public code
 
-void winc_task_init(void (*on_completion)(void *arg), void *completion_arg) {
+void winc_task_connect(const char *ssid, const char *pass) {
   s_winc_task_ctx.state = WINC_TASK_STATE_INIT;
-  s_winc_task_ctx.on_completion = on_completion;
-  s_winc_task_ctx.completion_arg = completion_arg;
-  s_winc_task_ctx.dhcpAddr = 0; // not yet set.
-  s_winc_task_ctx.timeUTC = 0;  // not yet set.
+  s_winc_task_ctx.ssid = ssid;
+  s_winc_task_ctx.pass = pass;
+}
+
+void winc_task_disconnect(void) {
+  s_winc_task_ctx.state = WINC_TASK_STATE_START_DISCONNECT;
 }
 
 void winc_task_step(void) {
@@ -134,89 +127,30 @@ void winc_task_step(void) {
   } break;
 
   case WINC_TASK_STATE_REQ_DHCP: {
-    // Requesting DHCP from Access Point.  Note we don't need to do this --
-    // the WINC handles it internally -- but we can specify a callback to see
-    // when it happens.
+    // Request DHCP from Access Point.  Although the WINC handles this
+    // internally, registering a callback lets us report when it happens.
     WDRV_WINC_IPUseDHCPSet(s_winc_task_ctx.wdrHandle, &winc_task_dhcp_cb);
-    if (app_is_cold_boot()) {
-      // Cold boot: perform a BSS scan for all access points.
-      if (WDRV_WINC_STATUS_OK ==
-          WDRV_WINC_BSSFindFirst(s_winc_task_ctx.wdrHandle,
-                                 WDRV_WINC_ALL_CHANNELS,
-                                 true,
-                                 NULL,
-                                 NULL)) {
-        winc_task_set_state(WINC_TASK_STATE_SCANNING);
-      } else {
-        printf(
-                        "\nCall to WDRV_WINC_BSSFindFirst() failed");
-        endgame(WINC_TASK_STATE_ERROR);
-      }
-    } else {
-      // Warm boot: to straight to contacting AP
-      winc_task_set_state(WINC_TASK_STATE_CONFIGURING_STA);
-    }
-  } break;
-
-  case WINC_TASK_STATE_SCANNING: {
-    if (WDRV_WINC_BSSFindInProgress(s_winc_task_ctx.wdrHandle)) {
-      // remain in this state
-    } else {
-      printf(
-          "\nScan complete, %d AP(s) found",
-          WDRV_WINC_BSSFindGetNumBSSResults(s_winc_task_ctx.wdrHandle));
-      winc_task_set_state(WINC_TASK_STATE_GETTING_SCAN_RESULTS);
-    }
-  } break;
-
-  case WINC_TASK_STATE_GETTING_SCAN_RESULTS: {
-    WDRV_WINC_BSS_INFO BSSInfo;
-    WDRV_WINC_STATUS status;
-
-    if (WDRV_WINC_STATUS_OK ==
-        WDRV_WINC_BSSFindGetInfo(s_winc_task_ctx.wdrHandle, &BSSInfo)) {
-      printf(
-          "\nAP found: RSSI: %d %s", BSSInfo.rssi, BSSInfo.ctx.ssid.name);
-
-      status = WDRV_WINC_BSSFindNext(s_winc_task_ctx.wdrHandle, NULL);
-
-      if (WDRV_WINC_STATUS_BSS_FIND_END == status) {
-        // finished printing scanned APs
-        winc_task_set_state(WINC_TASK_STATE_CONFIGURING_STA);
-      } else if (WDRV_WINC_STATUS_NOT_OPEN == status) {
-        endgame(WINC_TASK_STATE_ERROR);
-      } else if (WDRV_WINC_STATUS_INVALID_ARG == status) {
-        endgame(WINC_TASK_STATE_ERROR);
-      } else {
-        // remain in this state to complete printing out scanned APs
-      }
-    } else {
-      printf( "\nError in WDRV_WINC_BSSFindGetInfo");
-      endgame(WINC_TASK_STATE_ERROR);
-    }
-
+    winc_task_set_state(WINC_TASK_STATE_CONFIGURING_STA);
   } break;
 
   case WINC_TASK_STATE_CONFIGURING_STA: {
     const char *err = NULL;
-    const char *ssid;
-    const char *pass;
+    const char *ssid = s_winc_task_ctx.ssid;
+    const char *pass = s_winc_task_ctx.pass;
     // use this do {} while(false) to handle a sequence of steps...
     do {
-      if (WDRV_WINC_STATUS_OK != WDRV_WINC_BSSCtxSetDefaults(&bssCtx)) {
+      if (WDRV_WINC_STATUS_OK != WDRV_WINC_BSSCtxSetDefaults(&s_bss)) {
         err = "WDRV_WINC_BSSCtxSetDefaults() failed";
         break;
       }
-      ssid = app_get_ssid();
       if (WDRV_WINC_STATUS_OK !=
-          WDRV_WINC_BSSCtxSetSSID(&bssCtx, (uint8_t *)ssid, strlen(ssid))) {
+          WDRV_WINC_BSSCtxSetSSID(&s_bss, (uint8_t *)ssid, strlen(ssid))) {
         err = "WDRV_WINC_BSSCtxSetSSID() failed";
         break;
       }
-      pass = app_get_pass();
       if (WDRV_WINC_STATUS_OK !=
           WDRV_WINC_AuthCtxSetWPA(
-              &authCtx, (uint8_t *)pass, strlen((const char *)pass))) {
+              &s_auth, (uint8_t *)pass, strlen((const char *)pass))) {
         err = "WDRV_WINC_AuthCtxSetWPA() failed";
         break;
       }
@@ -224,54 +158,66 @@ void winc_task_step(void) {
     } while (false);
 
     if (err) {
-      printf( "\n%s", err);
-      endgame(WINC_TASK_STATE_ERROR);
+      YB_LOG_ERROR("%s", err);
+      winc_task_set_state(WINC_TASK_STATE_ERROR);
 
     } else {
-      winc_task_set_state(WINC_TASK_STATE_REQ_CONNECTION);
+      winc_task_set_state(WINC_TASK_STATE_START_CONNECT);
     }
   } break;
 
-  case WINC_TASK_STATE_REQ_CONNECTION: {
+  case WINC_TASK_STATE_START_CONNECT: {
     if (WDRV_WINC_STATUS_OK ==
         WDRV_WINC_BSSConnect(s_winc_task_ctx.wdrHandle,
-                             &bssCtx,
-                             &authCtx,
+                             &s_bss,
+                             &s_auth,
                              &winc_task_wifi_notify_cb)) {
-      winc_task_set_state(WINC_TASK_STATE_AWAITING_CONNECTION);
+      winc_task_set_state(WINC_TASK_STATE_AWAIT_CONNECT);
     } else {
       // Retry WDRV_WINC_BSSConnect() until STATUS_OK?!?
     }
   } break;
 
-  case WINC_TASK_STATE_AWAITING_CONNECTION: {
+  case WINC_TASK_STATE_AWAIT_CONNECT: {
     // wait for winc_task_wifi_notify_cb to advance state.
     asm("nop");
   } break;
 
-  case WINC_TASK_STATE_REQ_NTP: {
-    // winc_task_wifi_notify_cb triggered.  Request NTP.
-    if (WDRV_WINC_STATUS_OK ==
-        WDRV_WINC_SystemTimeSNTPClientEnable(
-            s_winc_task_ctx.wdrHandle, WINC_TASK_NTP_POOL_HOSTNAME, true)) {
-      winc_task_set_state(WINC_TASK_STATE_GET_NTP);
+  case WINC_TASK_STATE_START_HTTP_TASK: {
+    YB_LOG_INFO("Starting HTTP task");
+    http_task_init(winc_task_get_handle(),
+                   APP_HOST_NAME,
+                   APP_HOST_IP_ADDR,
+                   APP_HOST_PORT,
+                   APP_HOST_USE_TLS,
+                   app_request_msg(),
+                   app_response_msg());
+    winc_task_set_state(WINC_TASK_STATE_AWAIT_HTTP_TASK);
+  } break;
+
+  case WINC_TASK_STATE_AWAIT_HTTP_TASK: {
+    http_task_step();
+    if (http_task_failed()) {
+      YB_LOG_FATAL("HTTP task failed - quitting");
+      winc_task_set_state(WINC_TASK_STATE_ERROR);
+    } else if (http_task_succeeded()) {
+      winc_task_set_state(WINC_TASK_STATE_START_DISCONNECT);
     } else {
-      printf( "\nNTP request failed");
-      endgame(WINC_TASK_STATE_ERROR);
+      // http task has not completed -- remain in this state
     }
   } break;
 
-  case WINC_TASK_STATE_GET_NTP: {
-    // Install NTP callback, to be triggered when NTP request completes
-    if (WDRV_WINC_STATUS_OK ==
-        WDRV_WINC_SystemTimeGetCurrent(s_winc_task_ctx.wdrHandle,
-                                       winc_task_ntp_cb)) {
-      winc_task_set_state(WINC_TASK_STATE_SUCCESS);
-    } else {
-      printf( "\nNTP get failed");
-      endgame(WINC_TASK_STATE_ERROR);
-    }
+  case WINC_TASK_STATE_START_DISCONNECT: {
+    m2m_wifi_disconnect();
+    winc_task_set_state(WINC_TASK_STATE_AWAIT_DISCONNECT);
   } break;
+
+  case WINC_TASK_STATE_AWAIT_DISCONNECT: {
+    // remain in this state until
+  } break;
+
+    // =============================
+    // common endpoints
 
   case WINC_TASK_STATE_SUCCESS: {
     asm("nop");
@@ -292,19 +238,18 @@ bool winc_task_failed(void) {
   return s_winc_task_ctx.state == WINC_TASK_STATE_ERROR;
 }
 
+void winc_task_shutdown(void) { m2m_wifi_deinit(NULL); }
+
 DRV_HANDLE winc_task_get_handle(void) { return s_winc_task_ctx.wdrHandle; }
-
-uint32_t winc_task_get_dhcp_addr(void) { return s_winc_task_ctx.dhcpAddr; }
-
-uint32_t winc_task_get_utc(void) { return s_winc_task_ctx.timeUTC; }
 
 // *****************************************************************************
 // Local (private, static) code
 
 static void winc_task_set_state(winc_task_state_t new_state) {
   if (new_state != s_winc_task_ctx.state) {
-    YB_LOG_STATE_CHANGE(winc_task_state_name(s_winc_task_ctx.state),
-                        winc_task_state_name(new_state));
+    YB_LOG_INFO("%s => %s",
+                winc_task_state_name(s_winc_task_ctx.state),
+                winc_task_state_name(new_state));
     s_winc_task_ctx.state = new_state;
   }
 }
@@ -313,23 +258,13 @@ static const char *winc_task_state_name(winc_task_state_t state) {
   return s_winc_task_state_names[state];
 }
 
-static void endgame(winc_task_state_t final_state) {
-  winc_task_set_state(final_state);
-  if (s_winc_task_ctx.on_completion != NULL) {
-    s_winc_task_ctx.on_completion(s_winc_task_ctx.completion_arg);
-  }
-}
-
 static void winc_task_dhcp_cb(DRV_HANDLE handle, uint32_t dhcpAddr) {
   // Called asynchronously in response to WDRV_WINC_IPUseDHCPSet()
   (void)handle;
-  s_winc_task_ctx.dhcpAddr = dhcpAddr;
-}
+  char s[20];
 
-static void winc_task_ntp_cb(DRV_HANDLE handle, uint32_t timeUTC) {
-  (void)handle;
-  s_winc_task_ctx.timeUTC = timeUTC;
-  printf( "\ntimeUTC = %lu", timeUTC);
+  YB_LOG_INFO("DHCP address is %s\r\n",
+              inet_ntop(AF_INET, &dhcpAddr, s, sizeof(s)));
 }
 
 static void winc_task_wifi_notify_cb(DRV_HANDLE handle,
@@ -337,11 +272,16 @@ static void winc_task_wifi_notify_cb(DRV_HANDLE handle,
                                      WDRV_WINC_CONN_STATE currentState,
                                      WDRV_WINC_CONN_ERROR errorCode) {
   if (WDRV_WINC_CONN_STATE_CONNECTED == currentState) {
-    printf( "\nConnected to AP");
-    winc_task_set_state(WINC_TASK_STATE_REQ_NTP);
+    YB_LOG_INFO("Connected to AP");
+    winc_task_set_state(WINC_TASK_STATE_START_HTTP_TASK);
 
   } else if (WDRV_WINC_CONN_STATE_DISCONNECTED == currentState) {
-    printf( "\nDisconnected from AP");
-    winc_task_set_state(WINC_TASK_STATE_REQ_CONNECTION);
+    YB_LOG_INFO("Disconnected from AP");
+    m2m_wifi_deinit(NULL);
+    winc_task_set_state(WINC_TASK_STATE_SUCCESS);
+
+  } else {
+    YB_LOG_WARN("winc_task_wifi_nofify_cb() received currenState = %d",
+                currentState);
   }
 }

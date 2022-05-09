@@ -1,9 +1,9 @@
 /**
- * @file winc_task.h
+ * @file yb_log.c
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,62 +25,58 @@
  *
  */
 
-#ifndef _WINC_TASK_H_
-#define _WINC_TASK_H_
-
 // *****************************************************************************
 // Includes
 
-#include "definitions.h"
-#include <stdint.h>
-#include <stdbool.h>
+#include "yb_log.h"
 
-// =============================================================================
-// C++ compatibility
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "app.h"
+#include <stdarg.h>
+#include <stdio.h>
 
 // *****************************************************************************
-// Public types and definitions
+// Local (private) types and definitions
 
 // *****************************************************************************
-// Public declarations
+// Local (private, static) storage
 
-/**
- * @brief Initialize the winc_task.
- */
-void winc_task_connect(const char *ssid, const char *pass);
+#define EXPAND_LEVEL_NAMES(_enum_id, _name) #_name,
+static const char *s_level_names[] = { YB_LOG_LEVELS(EXPAND_LEVEL_NAMES) };
 
-/**
- * @brief Start the disconnect sequence.
- */
-void winc_task_disconnect(void);
- 
-/**
- * @brief Advance the winc_task state machine
- */
-void winc_task_step(void);
+static yb_log_level_t s_reporting_level;
 
-bool winc_task_succeeded(void);
+// *****************************************************************************
+// Local (private, static) forward declarations
 
-bool winc_task_failed(void);
+static const char *get_level_name(yb_log_level_t level);
 
-/**
- * @brief Release any resources allocated by winc_task.
- */
-void winc_task_shutdown(void);
+// *****************************************************************************
+// Public code
 
-/**
- * @brief Return the driver handle for the WINC chip.
- *
- * NOTE: only valid when winc_task_succeeded() returns true;
- */
-DRV_HANDLE winc_task_get_handle(void);
-
-#ifdef __cplusplus
+void yb_log_init(void) {
+  yb_log_set_reporting_level(YB_LOG_LEVEL_INFO);
 }
-#endif
 
-#endif /* #ifndef _WINC_TASK_H_ */
+void yb_log_set_reporting_level(yb_log_level_t reporting_level) {
+  s_reporting_level = reporting_level;
+}
+
+void yb_log(yb_log_level_t level, const char *fmt, ...) {
+  if (level >= s_reporting_level) {
+    va_list ap;
+    const char *s = get_level_name(level);
+
+    printf("\n%8.2f [%s] ", app_uptime_ms(), s);
+    va_start(ap, fmt);
+    vprintf(fmt, ap);
+    va_end(ap);
+  }
+}
+
+// *****************************************************************************
+// Local (private, static) code
+
+static const char *get_level_name(yb_log_level_t level) {
+  const char *s = s_level_names[level];
+  return s;
+}

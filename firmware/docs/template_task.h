@@ -1,9 +1,9 @@
 /**
- * @file yb_utils.c
+ * @file template.h
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,31 +25,56 @@
  *
  */
 
+#ifndef _TEMPLATE_TASK_H_
+#define _TEMPLATE_TASK_H_
+
 // *****************************************************************************
 // Includes
 
-#include "yb_utils.h"
-
-#include "definitions.h"
-#include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
+#include <stdbool.h>
+
+// =============================================================================
+// C++ compatibility
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // *****************************************************************************
-// Local (private) types and definitions
+// Public types and definitions
 
 // *****************************************************************************
-// Local (private, static) forward declarations
+// Public declarations
+
+/**
+ * @brief Initialize the template_task.
+ *
+ * If on_completion is non-null, it specifies a function to call when the
+ * task completes (either successfully or on failure).
+ */
+void template_task_init(void (*on_completion)(void *arg), void *completion_arg);
+
+/**
+ * @brief Return true if the task has completed successfully.
+ */
+bool template_task_succeeded(void);
+
+/**
+ * @brief Return true if the task has completed with an error.
+ */
+bool template_task_failed(void);
+
+/**
+ * @brief Advance the template_task state machine
+ */
+void template_task_step(void);
 
 // *****************************************************************************
-// Local (private, static) storage
+// EOF
 
-// *****************************************************************************
-// Public code
-
-void yb_utils_log_timestamp(void) {
-  printf("\n%10lu ", SYS_TIME_CountToMS(SYS_TIME_CounterGet()));
+#ifdef __cplusplus
 }
+#endif
 
-// *****************************************************************************
-// Local (private, static) code
+#endif /* #ifndef _TEMPLATE_TASK_H_ */

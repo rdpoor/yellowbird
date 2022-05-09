@@ -384,7 +384,7 @@ void SYS_Initialize ( void* data )
     STDIO_BufferModeSet();
 
 
-  
+
     PORT_Initialize();
 
     CLOCK_Initialize();
@@ -407,7 +407,11 @@ void SYS_Initialize ( void* data )
 
     EIC_Initialize();
 
-    RTC_Initialize();
+    // [rdp] We use the RTC to wake the processor from hibernate mode. In order
+    // to avoid time slippage it must run continually without getting reset.
+    // Because RTC_Initialize() resets the RTC, we call it in APP_Initialize() 
+    // only on cold reboot rather than always calling it here.
+    // RTC_Initialize();
 
 	BSP_Initialize();
 

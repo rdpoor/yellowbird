@@ -38,8 +38,8 @@ peripherals prior to hibernations.
 
 ### Waking and hibernating
 
-On cold boot the system writes the RTC count into app.last_wake_at.  Before
-hibernating, it increments last_wake_at by wake_interval_ms and sets the RTC
+On cold boot the system writes the RTC count into app.prev_wake_at.  Before
+hibernating, it increments prev_wake_at by wake_interval_ms and sets the RTC
 to wake the processor at that time (assuming it is sufficiently far in the
 future) and enters hibernate mote.
 

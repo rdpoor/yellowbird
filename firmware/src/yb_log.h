@@ -1,9 +1,9 @@
 /**
- * @file winc_task.h
+ * @file yb_log.h
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,15 +25,14 @@
  *
  */
 
-#ifndef _WINC_TASK_H_
-#define _WINC_TASK_H_
+#ifndef _YB_LOG_H_
+#define _YB_LOG_H_
 
 // *****************************************************************************
 // Includes
 
-#include "definitions.h"
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 // =============================================================================
 // C++ compatibility
@@ -45,42 +44,35 @@ extern "C" {
 // *****************************************************************************
 // Public types and definitions
 
+#define YB_LOG_LEVELS(M)                                                       \
+  M(YB_LOG_LEVEL_TRACE, "TRACE")                                               \
+  M(YB_LOG_LEVEL_DEBUG, "DEBUG")                                               \
+  M(YB_LOG_LEVEL_INFO, "INFO")                                                 \
+  M(YB_LOG_LEVEL_WARN, "WARN")                                                 \
+  M(YB_LOG_LEVEL_ERROR, "ERROR")                                               \
+  M(YB_LOG_LEVEL_FATAL, "FATAL")
+
+#define EXPAND_LOG_LEVEL_ENUM(_enum_id, _name) _enum_id,
+typedef enum { YB_LOG_LEVELS(EXPAND_LOG_LEVEL_ENUM) } yb_log_level_t;
+
+#define YB_LOG_TRACE(...) yb_log(YB_LOG_LEVEL_TRACE, __VA_ARGS__)
+#define YB_LOG_DEBUG(...) yb_log(YB_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#define YB_LOG_INFO(...) yb_log(YB_LOG_LEVEL_INFO, __VA_ARGS__)
+#define YB_LOG_WARN(...) yb_log(YB_LOG_LEVEL_WARN, __VA_ARGS__)
+#define YB_LOG_ERROR(...) yb_log(YB_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define YB_LOG_FATAL(...) yb_log(YB_LOG_LEVEL_FATAL, __VA_ARGS__)
+
 // *****************************************************************************
 // Public declarations
 
-/**
- * @brief Initialize the winc_task.
- */
-void winc_task_connect(const char *ssid, const char *pass);
+void yb_log_init(void);
 
-/**
- * @brief Start the disconnect sequence.
- */
-void winc_task_disconnect(void);
- 
-/**
- * @brief Advance the winc_task state machine
- */
-void winc_task_step(void);
+void yb_log_set_reporting_level(yb_log_level_t reporting_level);
 
-bool winc_task_succeeded(void);
-
-bool winc_task_failed(void);
-
-/**
- * @brief Release any resources allocated by winc_task.
- */
-void winc_task_shutdown(void);
-
-/**
- * @brief Return the driver handle for the WINC chip.
- *
- * NOTE: only valid when winc_task_succeeded() returns true;
- */
-DRV_HANDLE winc_task_get_handle(void);
+void yb_log(yb_log_level_t level, const char *fmt, ...);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* #ifndef _WINC_TASK_H_ */
+#endif /* #ifndef _YB_LOG_H_ */

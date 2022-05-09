@@ -1,9 +1,9 @@
 /**
- * @file yb_utils.h
+ * @file template.h
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,8 +25,8 @@
  *
  */
 
-#ifndef _YB_UTILS_H_
-#define _YB_UTILS_H_
+#ifndef _TEMPLATE_H_
+#define _TEMPLATE_H_
 
 // *****************************************************************************
 // Includes
@@ -44,20 +44,11 @@ extern "C" {
 // *****************************************************************************
 // Public types and definitions
 
-#define YB_LOG(...) do { \
-  yb_utils_log_timestamp(); \
-  printf(__VA_ARGS__); \
-} while (0)
-
-#define YB_LOG_STATE_CHANGE(s0, s1) YB_LOG("%s => %s", s0, s1)
-
 // *****************************************************************************
 // Public declarations
-
-void yb_utils_log_timestamp(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* #ifndef _YB_UTILS_H_ */
+#endif /* #ifndef _TEMPLATE_H_ */

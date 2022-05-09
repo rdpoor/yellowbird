@@ -3,7 +3,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,8 +31,10 @@
 // *****************************************************************************
 // Includes
 
-#include <stdbool.h>
+#include "mu_strbuf.h"
+#include "yb_rtc.h"
 #include <stdint.h>
+#include <stdbool.h>
 
 // =============================================================================
 // C++ compatibility
@@ -44,31 +46,59 @@ extern "C" {
 // *****************************************************************************
 // Public types and definitions
 
+#define APP_HOST_NAME "example.com"
+#define APP_HOST_IP_ADDR NULL        // use APP_HOST_NAME
+#define APP_HOST_PORT 443            // https
+#define APP_HOST_USE_TLS true
+
+/**
+ * @brief Data that is preserved across reboots.
+ */
 typedef struct {
-  uint32_t reboot_count;
-  uint32_t wake_at_tics;
+  uint32_t reboot_count;   // # of times system rebooted
+  uint32_t success_count;  // # of times app completed HTTP exchange
+  yb_rtc_tics_t wake_at;   // RTC time at which app woke up
 } app_nv_data_t;
 
 // *****************************************************************************
 // Public declarations
 
 /**
- * @brief Initialization, called once at startup
+ * @brief Initialize the app.
  */
-void APP_Initialize ( void );
+void APP_Initialize(void);
 
 /**
- * @brief Called repeatedly during execution
+ * @brief Advance the app state machine
  */
-void APP_Tasks( void );
+void APP_Tasks(void);
 
+/**
+ * @brief Return true if the most recent wake was NOT an RTC wake from sleep.
+ */
 bool app_is_cold_boot(void);
-uint32_t app_get_wake_interval_s(void);
-const char *app_get_ssid(void);
-const char *app_get_pass(void);
+
+/**
+ * @brief Return the number of milliseconds since the last reboot
+ */
+yb_rtc_ms_t app_uptime_ms(void);
+
+/**
+ * @brief Return a reference to a buffer holding the HTTP request (header and
+ * body)
+ */
+mu_strbuf_t *app_request_msg();
+
+/**
+ * @brief Return a reference to a buffer to receive the HTTP response.
+ */
+mu_strbuf_t *app_response_msg();
+
+// *****************************************************************************
+// EOF
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _APP_H */
+#endif /* #ifndef _APP_H_ */

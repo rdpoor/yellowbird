@@ -1,5 +1,5 @@
 /**
- * @file winc_task.h
+ * @file imager_task.h
  *
  * MIT License
  *
@@ -25,14 +25,12 @@
  *
  */
 
-#ifndef _WINC_TASK_H_
-#define _WINC_TASK_H_
+#ifndef _IMAGER_TASK_H_
+#define _IMAGER_TASK_H_
 
 // *****************************************************************************
 // Includes
 
-#include "definitions.h"
-#include <stdint.h>
 #include <stdbool.h>
 
 // =============================================================================
@@ -48,39 +46,23 @@ extern "C" {
 // *****************************************************************************
 // Public declarations
 
-/**
- * @brief Initialize the winc_task.
- */
-void winc_task_connect(const char *ssid, const char *pass);
+void imager_task_init(const char *filename);
+
+void imager_task_step(void);
+
+bool imager_task_succeeded(void);
+
+bool imager_task_failed(void);
 
 /**
- * @brief Start the disconnect sequence.
+ * @brief Release any resources allocated by imager_task.
  */
-void winc_task_disconnect(void);
- 
-/**
- * @brief Advance the winc_task state machine
- */
-void winc_task_step(void);
+void imager_task_shutdown(void);
 
-bool winc_task_succeeded(void);
 
-bool winc_task_failed(void);
-
-/**
- * @brief Release any resources allocated by winc_task.
- */
-void winc_task_shutdown(void);
-
-/**
- * @brief Return the driver handle for the WINC chip.
- *
- * NOTE: only valid when winc_task_succeeded() returns true;
- */
-DRV_HANDLE winc_task_get_handle(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* #ifndef _WINC_TASK_H_ */
+#endif /* #ifndef _IMAGER_TASK_H_ */

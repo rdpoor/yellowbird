@@ -22,7 +22,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 #ifndef _HTTP_TASK_H_
@@ -32,6 +31,7 @@
 // Includes
 
 #include "driver/driver_common.h"
+#include "mu_strbuf.h"
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -55,10 +55,12 @@ extern "C" {
  * the http_task will perform a DNS lookup using host_name.  Therefore, one or
  * the other must be provided (but not both).
  *
+ * @param winc_handle A handle on the WINC devise.
  * @param host_name The name of the host to connect to.  If host_ipv4 is zero,
  *        then host_name is used for a DNS lookup.  If host_ipv4 is non-zero,
- *        the host_name parameter is ignored and no DNS lookup is performed.
+ *        this host_name parameter is ignored and no DNS lookup is performed.
  * @param host_ipv4 An IP Version 4 numeric address that identifies the host.
+          If is is NULL, then host_name must resolve to a valid host.
  * @param use_tls If true, use TLS to when connecting.
  * @param req_str The user-supplied buffer containing the entire HTTP request,
  *        including header and body.
@@ -66,29 +68,28 @@ extern "C" {
  * @param rsp_str The user supplied buffer for receiving the HTTP response.
  * @param rsp_length The length of the rsp_buf.  If the response exceeds this
  *        limit, it will be truncated.
- * @param on_completion If non-null, specifies a callback to be triggered when
- *        the http_task completes, either successfully or on failure.
- * @param completion_arg A user-supplied argument to be passed to the callback.
  */
-void http_task_init(const char *host_name,
-                    uint32_t host_ipv4,
-                    uint16_t host_port,
-                    bool use_tls,
-                    const char *req_str,
-                    size_t req_length,
-                    char *rsp_str,
-                    size_t rsp_length,
-                    void (*on_completion)(void *arg),
-                    void *completion_arg);
+ void http_task_init(DRV_HANDLE winc_handle,
+                     const char *host_name,
+                     const char *host_ipv4,
+                     uint16_t host_port,
+                     bool use_tls,
+                     mu_strbuf_t *request_msg,
+                     mu_strbuf_t *response_msg);
 
 /**
  * @brief Advance the http_task state machine.
  */
-void http_task_step(DRV_HANDLE handle);
+void http_task_step(void);
 
 bool http_task_succeeded(void);
 
 bool http_task_failed(void);
+
+/**
+ * @brief Release any resources allocated by http_task.
+ */
+void http_task_shutdown(void);
 
 #ifdef __cplusplus
 }

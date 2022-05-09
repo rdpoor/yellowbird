@@ -1,9 +1,9 @@
 /**
- * @file winc_task.h
+ * @file template.c
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,62 +25,25 @@
  *
  */
 
-#ifndef _WINC_TASK_H_
-#define _WINC_TASK_H_
-
 // *****************************************************************************
 // Includes
 
-#include "definitions.h"
-#include <stdint.h>
+#include "template.h"
+
 #include <stdbool.h>
-
-// =============================================================================
-// C++ compatibility
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <stdint.h>
 
 // *****************************************************************************
-// Public types and definitions
+// Local (private) types and definitions
 
 // *****************************************************************************
-// Public declarations
+// Local (private, static) storage
 
-/**
- * @brief Initialize the winc_task.
- */
-void winc_task_connect(const char *ssid, const char *pass);
+// *****************************************************************************
+// Local (private, static) forward declarations
 
-/**
- * @brief Start the disconnect sequence.
- */
-void winc_task_disconnect(void);
- 
-/**
- * @brief Advance the winc_task state machine
- */
-void winc_task_step(void);
+// *****************************************************************************
+// Public code
 
-bool winc_task_succeeded(void);
-
-bool winc_task_failed(void);
-
-/**
- * @brief Release any resources allocated by winc_task.
- */
-void winc_task_shutdown(void);
-
-/**
- * @brief Return the driver handle for the WINC chip.
- *
- * NOTE: only valid when winc_task_succeeded() returns true;
- */
-DRV_HANDLE winc_task_get_handle(void);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* #ifndef _WINC_TASK_H_ */
+// *****************************************************************************
+// Local (private, static) code

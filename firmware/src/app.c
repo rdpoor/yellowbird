@@ -3,7 +3,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,358 +32,298 @@
 
 #include "config_task.h"
 #include "definitions.h"
-#include "m2m_hif.h"
-#include "nv_data.h"
 #include "http_task.h"
-#include "spi_flash_map.h"
-#include "wdrv_winc_client_api.h"
-#include "winc_imager.h"
+#include "imager_task.h"
+#include "mu_strbuf.h"
+#include "nv_data.h"
 #include "winc_task.h"
-#include "yb_utils.h"
+#include "yb_log.h"
+#include "yb_rtc.h"
+
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 
 // *****************************************************************************
-// Local types and definitions
+// Local (private) types and definitions
 
-#define APP_VERSION "0.0.7"
+#define APP_VERSION "0.1.0"
 
-#define MIN_SLEEP_TICS 3               // 90 microseonds should be plenty...
 #define SD_DEVICE_NAME "/dev/mmcblka1"
 #define SD_MOUNT_NAME "/mnt/mydrive"
-#define FILE_IMAGE_NAME "winc.img"
+#define MOUNT_TIMEOUT_MS 10000
+#define CONFIG_FILE_NAME "config.txt"
 
-#define HTTP_HOST_NAME "www.example.com"
-#define HTTP_HOST_ADDR 0
-#define HTTP_HOST_PORT 443
-#define HTTP_USE_TLS true
-#define HTTP_RESPONSE_BUFLEN 1500
+#define TCP_BUFFER_SIZE 1460
+#define TCP_SEND_MESSAGE                                                       \
+  "GET /index.html HTTP/1.1\r\n"                                               \
+  "Host: example.com\r\n"                                                      \
+  "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0)\r\n"         \
+  "Accept: */*;q=0.8\r\n"                                                      \
+  "\r\n"
 
-#define EXPAND_APP_STATES                                                      \
-  DEFINE_APP_STATE(APP_STATE_INIT)                                             \
-  DEFINE_APP_STATE(APP_STATE_AWAIT_WINC)                                       \
-  DEFINE_APP_STATE(APP_STATE_PRINTING_BANNER)                                  \
-  DEFINE_APP_STATE(APP_STATE_AWAIT_FILESYS)                                    \
-  DEFINE_APP_STATE(APP_STATE_AWAIT_CONFIG_TASK)                                \
-  DEFINE_APP_STATE(APP_STATE_AWAIT_WINC_IMAGER)                                \
-  DEFINE_APP_STATE(APP_STATE_CONNECT_TO_AP)                                    \
-  DEFINE_APP_STATE(APP_STATE_AWAITING_WINC_TASK)                               \
-  DEFINE_APP_STATE(APP_STATE_START_HTTP)                                       \
-  DEFINE_APP_STATE(APP_STATE_AWAIT_HTTP_TASK)                                  \
-  DEFINE_APP_STATE(APP_STATE_HIBERNATING)                                      \
-  DEFINE_APP_STATE(APP_STATE_ERROR)
+#define TASK_STATES(M)                                                         \
+  M(APP_STATE_INIT)                                                            \
+  M(APP_STATE_AWAIT_FILESYS)                                                   \
+  M(APP_STATE_START_CONFIG_TASK)                                               \
+  M(APP_STATE_AWAIT_CONFIG_TASK)                                               \
+  M(APP_STATE_START_IMAGER_TASK)                                               \
+  M(APP_STATE_AWAIT_IMAGER_TASK)                                               \
+  M(APP_STATE_WARM_BOOT)                                                       \
+  M(APP_STATE_AWAIT_WINC)                                                      \
+  M(APP_STATE_START_WINC_TASK)                                                 \
+  M(APP_STATE_AWAIT_WINC_TASK)                                                 \
+  M(APP_STATE_START_HIBERNATION)                                               \
+  M(APP_STATE_TIMED_OUT)                                                       \
+  M(APP_STATE_ERROR)
 
-#undef DEFINE_APP_STATE
-#define DEFINE_APP_STATE(_name) _name,
-typedef enum { EXPAND_APP_STATES } APP_STATES;
+#define EXPAND_ENUM(_name) _name,
+typedef enum { TASK_STATES(EXPAND_ENUM) } app_state_t;
 
 typedef struct {
-  APP_STATES state;
-  uint32_t mount_retries;
-} APP_DATA;
+  app_state_t state;
+  yb_rtc_tics_t reboot_at;        // time when system first woke up
+  yb_rtc_tics_t timeout_start_at; // start time for timeout timer
+  bool timeout_is_active;         // true when timeout timer is running
+  uint32_t mount_retries;         // # of times SYS_FS_Mount() was called)
+} app_ctx_t;
 
 // *****************************************************************************
-// Local (static, forward) declarations
+// Local (private, static) storage
 
-static void app_set_state(APP_STATES new_state);
-static const char *app_state_name(APP_STATES state);
+static uint8_t s_response_buf[TCP_BUFFER_SIZE];
+
+static mu_strbuf_t s_request_msg;
+static mu_strbuf_t s_response_msg;
+
+#define EXPAND_NAME(_name) #_name,
+static const char *s_app_state_names[] = {TASK_STATES(EXPAND_NAME)};
+
+static app_ctx_t s_app_ctx;
+
+// *****************************************************************************
+// Local (private, static) forward declarations
+
+static void app_set_state(app_state_t new_state);
+
+static const char *app_state_name(app_state_t state);
+
+/**
+ * @brief Called when a sub-task completes: run state machine.
+ */
+void app_step(void *arg);
+
+/**
+ * @brief Print the startup banner.
+ */
 static void print_banner(void);
-static void app_go_to_sleep(void);
-static bool system_is_busy(void);
-static void print_winc_version(void);
-
-// *****************************************************************************
-// Local (static) storage
-
-static APP_DATA appData;
-
-#undef DEFINE_APP_STATE
-#define DEFINE_APP_STATE(_name) #_name,
-static const char *app_state_names[] = {EXPAND_APP_STATES};
-
-static const char HTTP_REQUEST_BUF[] = {
-"GET / undefined\r\n"
-"Host: www.example.com\r\n"
-"User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0\r\n"
-"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n"
-"Accept-Language: en-US,en;q=0.5\r\n"
-"Accept-Encoding: gzip, deflate, br\r\n"
-"DNT: 1\r\n"
-"Connection: keep-alive\r\n"
-"Upgrade-Insecure-Requests: 1\r\n"
-"Sec-Fetch-Dest: document\r\n"
-"Sec-Fetch-Mode: navigate\r\n"
-"Sec-Fetch-Site: none\r\n"
-"Sec-Fetch-User: ?1\r\n"
-"TE: trailers\r\n"
-"\r\n"
-};
-
-static char HTTP_RESPONSE_BUF[HTTP_RESPONSE_BUFLEN];
 
 // *****************************************************************************
 // Public code
 
 void APP_Initialize(void) {
-  appData.state = APP_STATE_INIT;
+  s_app_ctx.state = APP_STATE_INIT;
+  s_app_ctx.timeout_is_active = false;
   if (app_is_cold_boot()) {
-    nv_data_clear();     // forget everything you knew...
-    RTC_Initialize();    // Re-initialize only on cold boot
-    RTC_Timer32Start();  // start RTC
+    nv_data_clear(); // forget everything you knew...
+    yb_rtc_init();
   }
-  config_task_init(NULL, NULL);
+  mu_strbuf_init_from_cstr(&s_request_msg, TCP_SEND_MESSAGE);
+  mu_strbuf_init_rw(&s_response_msg, s_response_buf, TCP_BUFFER_SIZE);
+  s_app_ctx.reboot_at = yb_rtc_now();
 }
 
 void APP_Tasks(void) {
-  switch (appData.state) {
+
+  if (s_app_ctx.timeout_is_active &&
+      yb_rtc_elapsed_ms(s_app_ctx.timeout_start_at) >
+          config_task_get_timeout_ms()) {
+    // timed out before completing HTTP exchange
+    app_set_state(APP_STATE_TIMED_OUT);
+  }
+
+  switch (s_app_ctx.state) {
 
   case APP_STATE_INIT: {
     nv_data()->app_nv_data.reboot_count += 1;
-    app_set_state(APP_STATE_AWAIT_WINC);
-  } break;
-
-  case APP_STATE_AWAIT_WINC: {
-    if (SYS_STATUS_READY != WDRV_WINC_Status(sysObj.drvWifiWinc)) {
-      // remain in this state until WINC is ready
-    } else {
-      app_set_state(APP_STATE_PRINTING_BANNER);
-    }
-  } break;
-
-  case APP_STATE_PRINTING_BANNER: {
+    // Dubious coding practice: we are using timeout_start_at for two things:
+    // timeout for mounting FS and for failure to complete HTTP exchange.  But
+    // they're mutually exclusive, so we can get away with it.  See also
+    // APP_STATE_WARM_BOOT
+    s_app_ctx.timeout_start_at = yb_rtc_now();
     print_banner();
     if (app_is_cold_boot()) {
-      print_winc_version();
-      appData.mount_retries = 0;
+      s_app_ctx.mount_retries = 1;
       app_set_state(APP_STATE_AWAIT_FILESYS);
     } else {
-      app_set_state(APP_STATE_CONNECT_TO_AP);
+      app_set_state(APP_STATE_WARM_BOOT);
     }
   } break;
 
   case APP_STATE_AWAIT_FILESYS: {
-    // According to the documents, SYS_FS_Mount() should be calle repeatedly
-    // until it returns success.
-    appData.mount_retries += 1;
-    // if (SYS_FS_Mount(SD_DEVICE_NAME, SD_MOUNT_NAME, FAT, 0, NULL) ==
-    //     SYS_FS_RES_SUCCESS) {
-    //   SYS_DEBUG_PRINT(SYS_ERROR_DEBUG,
-    //                   "\nSD card mounted after %ld attempts",
-    //                   appData.mount_retries);
-      app_set_state(APP_STATE_AWAIT_CONFIG_TASK);
-    // } else if (appData.mount_retries % 100000 == 0) {
-    //   // remain in this state, but print out a message now and then...
-    //   SYS_DEBUG_PRINT(SYS_ERROR_ERROR,
-    //                   "\nSD card not ready after %ld attempts",
-    //                   appData.mount_retries);
-    // }
+    // Here while waiting for filesystem to initialize.  According to the docs,
+    // the app should call SYS_FS_Mount() repeatedly until success or timeout.
+    if (SYS_FS_Mount(SD_DEVICE_NAME, SD_MOUNT_NAME, FAT, 0, NULL) ==
+        SYS_FS_RES_SUCCESS) {
+      // mount succeeded
+      YB_LOG_DEBUG("Mounted FS after %ld calls to SYS_FS_Mount()",
+                   s_app_ctx.mount_retries);
+      app_set_state(APP_STATE_START_CONFIG_TASK);
+    } else if (yb_rtc_elapsed_ms(s_app_ctx.timeout_start_at) >=
+               MOUNT_TIMEOUT_MS) {
+      // Timed out waiting for mount...
+      YB_LOG_FATAL("Could not mount FS after %d ms - quitting",
+                   MOUNT_TIMEOUT_MS);
+      app_set_state(APP_STATE_ERROR);
+    } else {
+      // Remain in this state to retry mount
+      s_app_ctx.mount_retries += 1;
+    }
+  } break;
+
+  case APP_STATE_START_CONFIG_TASK: {
+    YB_LOG_INFO("Reading configuration file from %s", CONFIG_FILE_NAME);
+    config_task_init(CONFIG_FILE_NAME);
+    app_set_state(APP_STATE_AWAIT_CONFIG_TASK);
   } break;
 
   case APP_STATE_AWAIT_CONFIG_TASK: {
-    // repeatedly call config_task state machine until it completes
-    // config_task_step();
-    // if (config_task_succeeded()) {
-    //   const char *winc_image_filename = config_task_get_winc_image_filename();
-    //   // If a winc_image filename was provided, start the winc_imager task.
-    //   if (winc_image_filename != NULL) {
-    //     winc_imager_init(winc_image_filename, NULL, NULL);
-    //     app_set_state(APP_STATE_AWAIT_WINC_IMAGER);
-    //   } else {
-        app_set_state(APP_STATE_CONNECT_TO_AP);
-    //   }
-    // } else if (config_task_failed()) {
-    //   app_set_state(APP_STATE_ERROR);
-    // } else {
-    //   // remain in this state
-    // }
-  } break;
-
-  case APP_STATE_AWAIT_WINC_IMAGER: {
-    // Repeatedly call the winc_imager state machine until it completes.
-    winc_imager_step();
-    if (winc_imager_succeeded()) {
-        app_set_state(APP_STATE_CONNECT_TO_AP);
-    } else if (winc_imager_failed()) {
+    config_task_step();
+    if (config_task_failed()) {
+      YB_LOG_FATAL("Unable to open configuration file '%s' - quitting",
+                   CONFIG_FILE_NAME);
       app_set_state(APP_STATE_ERROR);
+    } else if (config_task_succeeded()) {
+      if (config_task_get_winc_image_filename() != NULL) {
+        // A WINC image filename was found -- update WINC firmware with it.
+        app_set_state(APP_STATE_START_IMAGER_TASK);
+      } else {
+        // Skip updating the WINC
+        app_set_state(APP_STATE_WARM_BOOT);
+      }
     } else {
-      // remain in this state
+      // still processing config file -- remain in this state.
     }
   } break;
 
-  case APP_STATE_CONNECT_TO_AP: {
-    winc_task_init(NULL, NULL);
-    app_set_state(APP_STATE_AWAITING_WINC_TASK);
+  case APP_STATE_START_IMAGER_TASK: {
+    YB_LOG_INFO("Reflashing WINC from %s", CONFIG_FILE_NAME);
+    imager_task_init(config_task_get_winc_image_filename());
+    app_set_state(APP_STATE_AWAIT_IMAGER_TASK);
   } break;
 
-  case APP_STATE_AWAITING_WINC_TASK: {
-    // Repeatedly call the winc_task state machine until it completes.
+  case APP_STATE_AWAIT_IMAGER_TASK: {
+    imager_task_step();
+    if (imager_task_failed()) {
+      YB_LOG_FATAL("Unable to reflash WINC from %s - quitting",
+                   config_task_get_winc_image_filename());
+      app_set_state(APP_STATE_ERROR);
+    } else if (imager_task_succeeded()) {
+      app_set_state(APP_STATE_WARM_BOOT);
+    } else {
+      // still running imager_task() - remain in this state
+    }
+  } break;
+
+  case APP_STATE_WARM_BOOT: {
+    // Arrive here on warm boot or after cold boot tasks complete.
+    if (app_is_cold_boot()) {
+      nv_data()->app_nv_data.wake_at = yb_rtc_now();
+    }
+    s_app_ctx.timeout_start_at = yb_rtc_now();
+    s_app_ctx.timeout_is_active = true;
+    app_set_state(APP_STATE_AWAIT_WINC);
+  } break;
+
+  case APP_STATE_AWAIT_WINC: {
+    if (SYS_STATUS_READY == WDRV_WINC_Status(sysObj.drvWifiWinc)) {
+      app_set_state(APP_STATE_START_WINC_TASK);
+    } else {
+      // remain in this state until WINC is ready
+    }
+  } break;
+
+  case APP_STATE_START_WINC_TASK: {
+    YB_LOG_INFO("Starting WINC task");
+    winc_task_connect(config_task_get_wifi_ssid(), config_task_get_wifi_pass());
+    app_set_state(APP_STATE_AWAIT_WINC_TASK);
+  } break;
+
+  case APP_STATE_AWAIT_WINC_TASK: {
     winc_task_step();
-    if (winc_task_succeeded()) {
-      app_set_state(APP_STATE_START_HTTP);
-    } else if (winc_task_failed()) {
+    if (winc_task_failed()) {
+      YB_LOG_FATAL("WINC task failed - quitting");
       app_set_state(APP_STATE_ERROR);
+    } else if (winc_task_succeeded()) {
+      nv_data()->app_nv_data.success_count += 1;
+      app_set_state(APP_STATE_START_HIBERNATION);
     } else {
-      // remain in this state
+      // winc task has not completed -- remain in this state
     }
   } break;
 
-  case APP_STATE_START_HTTP: {
-    // APP_WiFiConnectNotifyCallback triggered.  Wait for IP link.
-    http_task_init(HTTP_HOST_NAME,
-                   HTTP_HOST_ADDR,
-                   HTTP_HOST_PORT,
-                   HTTP_USE_TLS,
-                   HTTP_REQUEST_BUF,
-                   strlen(HTTP_REQUEST_BUF),
-                   HTTP_RESPONSE_BUF,
-                   HTTP_RESPONSE_BUFLEN,
-                   0,
-                   0);
-    app_set_state(APP_STATE_AWAIT_HTTP_TASK);
+  case APP_STATE_TIMED_OUT: {
+    // software timed out before completion.
+    YB_LOG_INFO("timed out");
+    app_set_state(APP_STATE_START_HIBERNATION);
   } break;
 
-  case APP_STATE_AWAIT_HTTP_TASK: {
-    // Repeatedly call the http_task state machine until it completes.
-    http_task_step(winc_task_get_handle());
-    if (http_task_succeeded()) {
-      // TODO: Mak sure WINC is shut down
-      app_set_state(APP_STATE_HIBERNATING);
-    } else if (http_task_failed()) {
-      // TODO: Log error
-      app_set_state(APP_STATE_HIBERNATING);
-    } else {
-      // remain in this state
-    }
-  } break;
-
-  case APP_STATE_HIBERNATING: {
-    // don't hibernate until other actions complete (e.g. printing).
-    if (system_is_busy()) {
-      // stay in this state
-    } else {
-      app_go_to_sleep();
-    }
+  case APP_STATE_START_HIBERNATION: {
+    // TODO: release WINC and any other resources.
+    YB_LOG_INFO("Preparing to hibernate");
+    http_task_shutdown();
+    winc_task_shutdown();
+    imager_task_shutdown();
+    config_task_shutdown();
+    SYS_FS_Unmount(SD_MOUNT_NAME);
+    yb_rtc_tics_t wake_at = nv_data()->app_nv_data.wake_at;
+    wake_at = yb_rtc_offset(wake_at, config_task_get_wake_interval_ms());
+    // record the time at which we next want to wake...
+    nv_data()->app_nv_data.wake_at = wake_at;
+    yb_rtc_hibernate_until(wake_at);
   } break;
 
   case APP_STATE_ERROR: {
-    // here on some error
+    // Cannot proceed due to some error.
+    // TODO: blink LED or other error indicator.
   } break;
-
-  default: {
-    /* TODO: Handle error in application's state machine. */
-    break;
-  }
-  }
+  } // switch
 }
 
 bool app_is_cold_boot(void) {
-  // In this application a warm boot is any form of wakeup from hibernation.
-  // Anything else is a cold boot.
+  // A warm boot is any form of wakeup from hibernation; all else is cold boot.
   RSTC_RESET_CAUSE rcause = RSTC_ResetCauseGet();
   bool is_warm_boot = rcause & 0x80; // msb signifies backup reset (e.g. RTC)
   return !is_warm_boot;
 }
 
-uint32_t app_get_wake_interval_s(void) {
-  return config_task_get_sleep_interval_s();
+yb_rtc_ms_t app_uptime_ms(void) {
+  return yb_rtc_elapsed_ms(s_app_ctx.reboot_at);
 }
 
-const char *app_get_ssid(void) {
-  return config_task_get_ssid();
-}
+mu_strbuf_t *app_request_msg() { return &s_request_msg; }
 
-const char *app_get_pass(void) {
-  return config_task_get_password();
-}
+mu_strbuf_t *app_response_msg() { return &s_response_msg; }
+
 
 // *****************************************************************************
-// Local (static) code
+// Local (private, static) code
 
-static void app_set_state(APP_STATES new_state) {
-  if (appData.state != new_state) {
-    YB_LOG_STATE_CHANGE(app_state_name(appData.state),
-                        app_state_name(new_state));
-    appData.state = new_state;
+static void app_set_state(app_state_t new_state) {
+  if (new_state != s_app_ctx.state) {
+    YB_LOG_INFO("%s => %s", app_state_name(s_app_ctx.state), app_state_name(new_state));
+    s_app_ctx.state = new_state;
   }
 }
 
-static const char *app_state_name(APP_STATES state) {
-  return app_state_names[state];
+static const char *app_state_name(app_state_t state) {
+  return s_app_state_names[state];
 }
 
 static void print_banner(void) {
   printf("\n##############################");
   printf("\n# Klatu Networks Yellowbird, v %s (%s boot) #%lu",
-                    APP_VERSION,
-                    app_is_cold_boot() ? "cold" : "warm",
-                    nv_data()->app_nv_data.reboot_count);
+         APP_VERSION,
+         app_is_cold_boot() ? "cold" : "warm",
+         nv_data()->app_nv_data.reboot_count);
   printf("\n##############################");
-}
-
-static void app_go_to_sleep(void) {
-    // Set the RTC match counter to bring the processor out of hibernation.
-    // Arrive here with app_nv_dta.wake_at_tics set to the time at which the
-    // system started.
-    uint32_t now = RTC_Timer32CounterGet();
-    uint32_t wake_interval_tics =
-      app_get_wake_interval_s() * RTC_COUNTER_CLOCK_FREQUENCY;
-    uint32_t then = nv_data()->app_nv_data.wake_at_tics += wake_interval_tics;
-    // Preventing "sleep for a long time" errors:
-    if (then - now < MIN_SLEEP_TICS) {
-      // wake time is "too soon in the future" -- push it out a bit so the
-      // counter hasn't passed the compare register by the time we sleep.
-      then = now + MIN_SLEEP_TICS;
-    } else if (then - now > wake_interval_tics) {
-      // the only way then - now can be greater than wake_interval_tics is if
-      // `then` is in the past.  Restart wake_at_tics in the future...
-      then = now + wake_interval_tics;
-    }
-    nv_data()->app_nv_data.wake_at_tics = then;
-    RTC_Timer32Compare0Set(then);
-    RTC_Timer32InterruptEnable(RTC_TIMER32_INT_MASK_CMP0);
-
-
-  PM_HibernateModeEnter();
-}
-
-static bool system_is_busy(void) {
-  bool is_busy = !SERCOM2_USART_TransmitComplete();
-  return is_busy;
-}
-
-static void print_winc_version(void) {
-  return;  // not ready for prime time -- causes faults (DMA not setup?)
-
-  // general violation of abstraction layers.  hopefully won't mess up too much.
-  int8_t ret = M2M_SUCCESS;                  // nm_common.h
-  uint8_t u8WifiMode = M2M_WIFI_MODE_NORMAL; // m2m_types.h
-  tstrM2mRev strtmp;                         // nmdrv.h
-
-  ret = nm_drv_init_start(&u8WifiMode); // nmdrv.h
-  if (ret == M2M_SUCCESS) {
-    ret = hif_init(NULL); // m2m_hif.h
-    if (ret == M2M_SUCCESS) {
-      ret = nm_get_firmware_full_info(&strtmp); // nmdrv.h
-      printf("\nWINC1500 Info:");
-      printf("\n  Chip ID: %ld", strtmp.u32Chipid);
-      printf("\n  Firmware Ver: %u.%u.%u SVN Rev %u",
-                        strtmp.u8FirmwareMajor,
-                        strtmp.u8FirmwareMinor,
-                        strtmp.u8FirmwarePatch,
-                        strtmp.u16FirmwareSvnNum);
-      printf("\n  Firmware Built at %s Time %s",
-                        strtmp.BuildDate,
-                        strtmp.BuildTime);
-      printf("\n  Firmware Min Driver Ver: %u.%u.%u",
-                        strtmp.u8DriverMajor,
-                        strtmp.u8DriverMinor,
-                        strtmp.u8DriverPatch);
-      if (M2M_ERR_FW_VER_MISMATCH == ret) {
-        printf("\n  Mismatch Firmware Version");
-      }
-    }
-    hif_deinit(NULL); // nmdrv.h
-  }
-  nm_drv_deinit(NULL); // nmdrv.h
 }

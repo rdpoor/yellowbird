@@ -33,7 +33,7 @@
 #include "definitions.h"
 #include "spi_flash_map.h"
 #include "wdrv_winc_client_api.h"
-#include "yb_utils.h"
+#include "yb_log.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>

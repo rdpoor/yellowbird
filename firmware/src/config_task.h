@@ -31,6 +31,7 @@
 // *****************************************************************************
 // Includes
 
+#include "yb_rtc.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -70,24 +71,31 @@ typedef struct {
  * If on_completion is non-null, it specifies a function to call when the
  * config_task completes (either successfully or on failure).
  */
-void config_task_init(void (*on_completion)(void *arg), void *completion_arg);
+void config_task_init(const char *filename);
 
 /**
  * @brief Advance the config_task state machine.
  */
 void config_task_step(void);
 
-const char *config_task_get_ssid(void);
-
-const char *config_task_get_password(void);
-
-uint32_t config_task_get_sleep_interval_s(void);
-
-const char *config_task_get_winc_image_filename(void);
-
 bool config_task_succeeded(void);
 
 bool config_task_failed(void);
+
+/**
+* @brief Release any resources allocated by config_task.
+*/
+void config_task_shutdown(void);
+
+const char *config_task_get_wifi_ssid(void);
+
+const char *config_task_get_wifi_pass(void);
+
+yb_rtc_ms_t config_task_get_wake_interval_ms(void);
+
+const char *config_task_get_winc_image_filename(void);
+
+yb_rtc_ms_t config_task_get_timeout_ms(void);
 
 #ifdef __cplusplus
 }

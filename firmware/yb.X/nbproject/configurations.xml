@@ -141,9 +141,6 @@
             <logicalFolder name="f5" displayName="cache" projectFiles="true">
               <itemPath>../src/config/default/system/cache/sys_cache.h</itemPath>
             </logicalFolder>
-            <logicalFolder name="f7" displayName="debug" projectFiles="true">
-              <itemPath>../src/config/default/system/debug/sys_debug.h</itemPath>
-            </logicalFolder>
             <logicalFolder name="f6" displayName="dma" projectFiles="true">
               <itemPath>../src/config/default/system/dma/sys_dma.h</itemPath>
               <itemPath>../src/config/default/system/dma/sys_dma_mapping.h</itemPath>
@@ -324,14 +321,14 @@
       </logicalFolder>
       <itemPath>../src/app.h</itemPath>
       <itemPath>../src/config_task.h</itemPath>
-      <itemPath>../src/winc_imager.h</itemPath>
       <itemPath>../src/winc_task.h</itemPath>
       <itemPath>../src/nv_data.h</itemPath>
       <itemPath>../src/http_task.h</itemPath>
-      <itemPath>../src/yb_utils.h</itemPath>
-      <itemPath>../src/mu_parse_url.h</itemPath>
       <itemPath>../src/mu_str.h</itemPath>
       <itemPath>../src/mu_strbuf.h</itemPath>
+      <itemPath>../src/yb_log.h</itemPath>
+      <itemPath>../src/imager_task.h</itemPath>
+      <itemPath>../src/yb_rtc.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -505,14 +502,14 @@
       <itemPath>../src/main.c</itemPath>
       <itemPath>../src/app.c</itemPath>
       <itemPath>../src/config_task.c</itemPath>
-      <itemPath>../src/winc_imager.c</itemPath>
       <itemPath>../src/winc_task.c</itemPath>
       <itemPath>../src/nv_data.c</itemPath>
       <itemPath>../src/http_task.c</itemPath>
-      <itemPath>../src/yb_utils.c</itemPath>
-      <itemPath>../src/mu_parse_url.c</itemPath>
       <itemPath>../src/mu_str.c</itemPath>
       <itemPath>../src/mu_strbuf.c</itemPath>
+      <itemPath>../src/imager_task.c</itemPath>
+      <itemPath>../src/yb_rtc.c</itemPath>
+      <itemPath>../src/yb_log.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

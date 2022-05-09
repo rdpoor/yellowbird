@@ -33,7 +33,7 @@
 #include "definitions.h"
 #include "nv_data.h"
 #include "winc_imager.h"
-#include "yb_utils.h"
+#include "yb_log.h"
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -61,8 +61,7 @@ typedef enum { EXPAND_CONFIG_TASK_STATES } config_task_state_t;
 typedef struct {
   config_task_state_t state;
   SYS_FS_HANDLE file_handle;
-  void (*on_completion)(void *arg);
-  void *completion_arg;
+  const char *file_name;
 } config_task_ctx_t;
 
 // *****************************************************************************
@@ -70,11 +69,6 @@ typedef struct {
 
 static void config_task_set_state(config_task_state_t new_state);
 static const char *config_task_state_name(config_task_state_t state);
-
-/**
- * @brief Set the state to final_state and invoke on_completion.
- */
-static void endgame(config_task_state_t final_state);
 
 // *****************************************************************************
 // Local (private, static) storage
@@ -90,10 +84,9 @@ static const char *config_task_state_names[] = {EXPAND_CONFIG_TASK_STATES};
 // *****************************************************************************
 // Public code
 
-void config_task_init(void (*on_completion)(void *arg), void *completion_arg) {
+void config_task_init(const char *filename) {
   s_config_task_ctx.state = CONFIG_TASK_STATE_INIT;
-  s_config_task_ctx.on_completion = on_completion;
-  s_config_task_ctx.completion_arg = completion_arg;
+  s_config_task_ctx.file_name = filename;
 }
 
 void config_task_step(void) {
@@ -110,7 +103,7 @@ void config_task_step(void) {
       printf(
                       "\nUnable to select drive, error %d",
                       SYS_FS_Error());
-      endgame(CONFIG_TASK_STATE_ERROR);
+      config_task_set_state(CONFIG_TASK_STATE_ERROR);
     } else {
       config_task_set_state(CONFIG_TASK_STATE_OPENING_CONFIG);
     }
@@ -119,12 +112,12 @@ void config_task_step(void) {
   case CONFIG_TASK_STATE_OPENING_CONFIG: {
     // Arrive here with file system mounted.  Look for "config.txt"
     s_config_task_ctx.file_handle =
-        SYS_FS_FileOpen(CONFIG_FILE_NAME, SYS_FS_FILE_OPEN_READ);
+        SYS_FS_FileOpen(s_config_task_ctx.file_name, SYS_FS_FILE_OPEN_READ);
     if (s_config_task_ctx.file_handle == SYS_FS_HANDLE_INVALID) {
       printf(
                       "\nUnable to open config file, error %d",
                       SYS_FS_Error());
-      endgame(CONFIG_TASK_STATE_ERROR);
+      config_task_set_state(CONFIG_TASK_STATE_ERROR);
     } else {
       config_task_set_state(CONFIG_TASK_STATE_READING_CONFIG);
     }
@@ -142,7 +135,7 @@ void config_task_step(void) {
       config->sleep_interval = 60;
       strcpy(config->winc_img_filename, "winc_19_7_6.img");
       // END OF STUB
-      endgame(CONFIG_TASK_STATE_SUCCESS);
+      config_task_set_state(CONFIG_TASK_STATE_SUCCESS);
     } else {
       // read a line from the config file
       char *line = FATFS_gets(
@@ -151,7 +144,7 @@ void config_task_step(void) {
         printf(
                         "\nError while reading config file, error %d",
                         SYS_FS_Error());
-        endgame(CONFIG_TASK_STATE_ERROR);
+        config_task_set_state(CONFIG_TASK_STATE_ERROR);
         // TODO:
         // } else if (parse_config_line(s_read_buf) == false) {
         //   // error while parsing config file...
@@ -174,24 +167,6 @@ void config_task_step(void) {
   } // switch()
 }
 
-const char *config_task_get_ssid(void) {
-  // STUB
-  return "pichincha";
-}
-
-const char *config_task_get_password(void) {
-  // STUB
-  return "robandmarisol";
-}
-
-uint32_t config_task_get_sleep_interval_s(void) {
-  return 15;
-}
-
-const char *config_task_get_winc_image_filename(void) {
-  return NULL; // "winc_19_7_6.img";
-}
-
 bool config_task_succeeded(void) {
   return s_config_task_ctx.state == CONFIG_TASK_STATE_SUCCESS;
 }
@@ -200,24 +175,42 @@ bool config_task_failed(void) {
   return s_config_task_ctx.state == CONFIG_TASK_STATE_ERROR;
 }
 
+void config_task_shutdown(void) {
+
+}
+
+const char *config_task_get_wifi_ssid(void) {
+  // STUB
+  return "pichincha";
+}
+
+const char *config_task_get_wifi_pass(void) {
+  // STUB
+  return "robandmarisol";
+}
+
+yb_rtc_ms_t config_task_get_wake_interval_ms(void) {
+  return 20000.0;
+}
+
+const char *config_task_get_winc_image_filename(void) {
+  return NULL; // "winc_19_7_6.img";
+}
+
+yb_rtc_ms_t config_task_get_timeout_ms(void) {
+  return 15.0;
+}
+
 // *****************************************************************************
 // Local (private, static) code
 
 static void config_task_set_state(config_task_state_t new_state) {
-  if (new_state != s_config_task_ctx.state) {
-    YB_LOG_STATE_CHANGE(config_task_state_name(s_config_task_ctx.state),
-                        config_task_state_name(new_state));
+    if (new_state != s_config_task_ctx.state) {
+    YB_LOG_INFO("%s => %s", config_task_state_name(s_config_task_ctx.state), config_task_state_name(new_state));
     s_config_task_ctx.state = new_state;
   }
 }
 
 static const char *config_task_state_name(config_task_state_t state) {
   return config_task_state_names[state];
-}
-
-static void endgame(config_task_state_t final_state) {
-  config_task_set_state(final_state);
-  if (s_config_task_ctx.on_completion != NULL) {
-    s_config_task_ctx.on_completion(s_config_task_ctx.completion_arg);
-  }
 }

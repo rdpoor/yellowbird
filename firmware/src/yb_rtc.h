@@ -1,9 +1,9 @@
 /**
- * @file winc_task.h
+ * @file yb_rtc.h
  *
  * MIT License
  *
- * Copyright (c) 2022 R. Dunbar Poor
+ * Copyright (c) 2022 Klatu Networks, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,13 +25,12 @@
  *
  */
 
-#ifndef _WINC_TASK_H_
-#define _WINC_TASK_H_
+#ifndef _YB_RTC_H_
+#define _YB_RTC_H_
 
 // *****************************************************************************
 // Includes
 
-#include "definitions.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -45,42 +44,56 @@ extern "C" {
 // *****************************************************************************
 // Public types and definitions
 
+/**
+ * @brief Representation of time is an unsigned 32 bit value.
+ */
+typedef uint32_t yb_rtc_tics_t;
+
+/**
+ * @brief Durations are expressed as milliseconds.
+ */
+typedef float yb_rtc_ms_t;
+
+#define YB_RTC_MINIMUM_HIBERNATE_MS ((yb_rtc_ms_t)10.0)
+
 // *****************************************************************************
 // Public declarations
 
 /**
- * @brief Initialize the winc_task.
+ * @brief Initialize the rtc (note: resets RTC to 0)
  */
-void winc_task_connect(const char *ssid, const char *pass);
+void yb_rtc_init(void);
 
 /**
- * @brief Start the disconnect sequence.
+ * @brief Return the current RTC count.
  */
-void winc_task_disconnect(void);
- 
-/**
- * @brief Advance the winc_task state machine
- */
-void winc_task_step(void);
-
-bool winc_task_succeeded(void);
-
-bool winc_task_failed(void);
+yb_rtc_tics_t yb_rtc_now(void);
 
 /**
- * @brief Release any resources allocated by winc_task.
+ * @brief Return elapsed milliseconds since the given time.
  */
-void winc_task_shutdown(void);
+yb_rtc_ms_t yb_rtc_elapsed_ms(yb_rtc_tics_t since);
 
 /**
- * @brief Return the driver handle for the WINC chip.
+ * @brief Return the difference (in milliseconds) between two times: t1-t2
+ */
+yb_rtc_ms_t yb_rtc_difference_ms(yb_rtc_tics_t t1, yb_rtc_tics_t t2);
+
+/**
+ * @brief Add an offset to a time.
+ */
+yb_rtc_tics_t yb_rtc_offset(yb_rtc_tics_t t, yb_rtc_ms_t offset_ms);
+
+/**
+ * @brief Hibernate until the specified time arrives.
  *
- * NOTE: only valid when winc_task_succeeded() returns true;
+ * NOTE: The alarm will be set for t or now + MINIMUM_HIBERNATE_MS, whichever
+ * arrives later.
  */
-DRV_HANDLE winc_task_get_handle(void);
+void yb_rtc_hibernate_until(yb_rtc_tics_t t);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* #ifndef _WINC_TASK_H_ */
+#endif /* #ifndef _YB_RTC_H_ */
