@@ -207,8 +207,9 @@ void APP_Tasks(void) {
   } break;
 
   case APP_STATE_START_IMAGER_TASK: {
-    YB_LOG_INFO("Reflashing WINC from %s", CONFIG_FILE_NAME);
-    imager_task_init(config_task_get_winc_image_filename());
+    const char *image_file = config_task_get_winc_image_filename();
+    YB_LOG_INFO("Reflashing WINC from %s", image_file);
+    imager_task_init(image_file);
     app_set_state(APP_STATE_AWAIT_IMAGER_TASK);
   } break;
 

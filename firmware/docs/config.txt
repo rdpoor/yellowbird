@@ -1,0 +1,6 @@
+# this line is a comment.
+wifi_ssid = pichincha
+wifi_pass = robandmarisol
+wake_interval_ms = 60000.0
+timeout_ms = 20000.0
+winc_image = winc.img
