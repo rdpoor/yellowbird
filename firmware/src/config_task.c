@@ -53,8 +53,8 @@
 #define EXPAND_CONFIG_TASK_STATES                                              \
   DEFINE_CONFIG_TASK_STATE(CONFIG_TASK_STATE_INIT)                             \
   DEFINE_CONFIG_TASK_STATE(CONFIG_TASK_SETTING_DRIVE)                          \
-  DEFINE_CONFIG_TASK_STATE(CONFIG_TASK_STATE_OPENING_CONFIG)                   \
-  DEFINE_CONFIG_TASK_STATE(CONFIG_TASK_STATE_READING_CONFIG)                   \
+  DEFINE_CONFIG_TASK_STATE(CONFIG_TASK_STATE_OPENING_FILE)                   \
+  DEFINE_CONFIG_TASK_STATE(CONFIG_TASK_STATE_READING_FILE)                   \
   DEFINE_CONFIG_TASK_STATE(CONFIG_TASK_STATE_SUCCESS)                          \
   DEFINE_CONFIG_TASK_STATE(CONFIG_TASK_STATE_ERROR)
 
@@ -123,11 +123,11 @@ void config_task_step(void) {
       YB_LOG_ERROR("Unable to select drive, error %d", SYS_FS_Error());
       config_task_set_state(CONFIG_TASK_STATE_ERROR);
     } else {
-      config_task_set_state(CONFIG_TASK_STATE_OPENING_CONFIG);
+      config_task_set_state(CONFIG_TASK_STATE_OPENING_FILE);
     }
   } break;
 
-  case CONFIG_TASK_STATE_OPENING_CONFIG: {
+  case CONFIG_TASK_STATE_OPENING_FILE: {
     // Arrive here with file system mounted.  Look for "config.txt"
     s_config_task_ctx.file_handle =
         SYS_FS_FileOpen(s_config_task_ctx.file_name, SYS_FS_FILE_OPEN_READ);
@@ -145,25 +145,36 @@ void config_task_step(void) {
                   file_stat.fsize,
                   file_stat.fattrib,
                   file_stat.fname);
-      config_task_set_state(CONFIG_TASK_STATE_READING_CONFIG);
+      config_task_set_state(CONFIG_TASK_STATE_READING_FILE);
     }
   } break;
 
-  case CONFIG_TASK_STATE_READING_CONFIG: {
+  case CONFIG_TASK_STATE_READING_FILE: {
     // Arrive here with config.txt open for reading
-    if (FATFS_eof(s_config_task_ctx.file_handle)) {
+    if (SYS_FS_FileEOF(s_config_task_ctx.file_handle)) {
       // We have processed the last line of config.txt -- all done.
       SYS_FS_FileClose(s_config_task_ctx.file_handle);
       config_task_set_state(CONFIG_TASK_STATE_SUCCESS);
     } else {
-      // read a line from the config file
-      char *line = FATFS_gets(
-          s_read_buf, sizeof(s_read_buf), s_config_task_ctx.file_handle);
-      if (line == NULL) {
-        YB_LOG_ERROR("Error while reading config file, error %d",
-                     SYS_FS_Error());
-        config_task_set_state(CONFIG_TASK_STATE_ERROR);
-      } else {
+        // get a line from the config file using byte at a time read operation.
+        char *p = s_read_buf;
+        // Stop at MAX_CONFIG_LINE_LENGTH-1 so we can always null terminate
+        for (int i = 0; i < MAX_CONFIG_LINE_LENGTH - 1; i++) {
+          char c;
+          size_t n_read = SYS_FS_FileRead(s_app_ctx.file_handle, &c, 1);
+          if (n_read == 0) {
+            break;
+          } else if (n_read == -1) {
+            break;
+          } else if (c == '\r') {
+            // silently eat \r
+          } else if (c == '\n') {
+            break;
+          } else {
+            *p++ = c;
+          }
+        }
+        *p = '\0'; // null terminate the string in s_read_buf
         // parse line and remain in this state to parse more lines.
         // Be permissive: ignore parse errors.
         mu_cfg_parser_read_line(&s_config_task_ctx.parser, line);
