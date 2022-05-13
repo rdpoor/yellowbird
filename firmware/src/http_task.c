@@ -282,10 +282,10 @@ static void http_task_socket_callback(SOCKET socket,
     if (recv_msg != NULL && recv_msg->s16BufferSize > 0) {
       bool print_dots = false;
       uint32_t to_print = recv_msg->s16BufferSize;
-      if (to_print > 300) {
+      if (to_print > 200) {
         print_dots = true;
-        recv_msg->pu8Buffer[300] = 0; // bam.  null terminate
-        to_print = 300;
+        recv_msg->pu8Buffer[200] = 0; // bam.  null terminate
+        to_print = 200;
       }
       YB_LOG_INFO("Received response:\n==<<<\n%s%s\n==<<<",
                   (char *)recv_msg->pu8Buffer,

@@ -278,7 +278,9 @@ void APP_Tasks(void) {
   } break;
 
   case APP_STATE_START_HIBERNATION: {
-    // TODO: release WINC and any other resources.
+    YB_LOG_INFO("Success / Attempts = %d / %d",
+                nv_data()->app_nv_data.success_count,
+                nv_data()->app_nv_data.reboot_count);
     YB_LOG_INFO("Preparing to hibernate");
     http_task_shutdown();
     winc_task_shutdown();
