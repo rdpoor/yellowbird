@@ -194,7 +194,6 @@ void winc_task_step(void) {
   } break;
 
   case WINC_TASK_STATE_START_HTTP_TASK: {
-    YB_LOG_INFO("Starting HTTP task");
     http_task_init(winc_task_get_handle(),
                    APP_HOST_NAME,
                    APP_HOST_IP_ADDR,

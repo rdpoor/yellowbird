@@ -254,7 +254,6 @@ void APP_Tasks(void) {
   } break;
 
   case APP_STATE_START_WINC_TASK: {
-    YB_LOG_INFO("Starting WINC task");
     winc_task_connect(config_task_get_wifi_ssid(), config_task_get_wifi_pass());
     app_set_state(APP_STATE_AWAIT_WINC_TASK);
   } break;
