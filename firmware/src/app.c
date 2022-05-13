@@ -103,8 +103,14 @@ static app_ctx_t s_app_ctx;
 // *****************************************************************************
 // Local (private, static) forward declarations
 
+/**
+ * @brief Set and print the state transition
+ */
 static void app_set_state(app_state_t new_state);
 
+/**
+ * @brief Return the state name as a string
+ */
 static const char *app_state_name(app_state_t state);
 
 /**
@@ -134,12 +140,15 @@ void APP_Initialize(void) {
 
 void APP_Tasks(void) {
 
-  if (s_app_ctx.timeout_is_active &&
-      yb_rtc_elapsed_ms(s_app_ctx.timeout_start_at) >
-          config_task_get_timeout_ms()) {
-    // timed out before completing HTTP exchange
-    app_set_state(APP_STATE_TIMED_OUT);
-    s_app_ctx.timeout_is_active = false; // once is enough...
+  if (s_app_ctx.timeout_is_active) {
+      yb_rtc_ms_t start_at = s_app_ctx.timeout_start_at;
+      yb_rtc_ms_t timeout = config_task_get_timeout_ms();
+      yb_rtc_ms_t elapsed = yb_rtc_elapsed_ms(start_at);
+      if (elapsed > timeout) {
+      // timed out before completing HTTP exchange
+        app_set_state(APP_STATE_TIMED_OUT);
+        s_app_ctx.timeout_is_active = false; // once is enough...
+      }
   }
 
   switch (s_app_ctx.state) {

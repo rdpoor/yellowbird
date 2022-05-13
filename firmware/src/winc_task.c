@@ -42,6 +42,7 @@
 #define STATES(M)                                                              \
   M(WINC_TASK_STATE_INIT)                                                      \
   M(WINC_TASK_STATE_REQ_OPEN)                                                  \
+  M(WINC_TASK_STATE_PRINT_VERSION)                                             \
   M(WINC_TASK_STATE_REQ_DHCP)                                                  \
   M(WINC_TASK_STATE_CONFIGURING_STA)                                           \
   M(WINC_TASK_STATE_START_CONNECT)                                             \
@@ -83,6 +84,8 @@ static void winc_task_set_state(winc_task_state_t new_state);
 
 static const char *winc_task_state_name(winc_task_state_t state);
 
+static void print_winc_version(tstrM2mRev *version_info);
+
 static void winc_task_dhcp_cb(DRV_HANDLE handle, uint32_t ipAddress);
 
 static void winc_task_wifi_notify_cb(DRV_HANDLE handle,
@@ -113,10 +116,24 @@ void winc_task_step(void) {
   case WINC_TASK_STATE_REQ_OPEN: {
     s_winc_task_ctx.wdrHandle = WDRV_WINC_Open(0, 0);
     if (s_winc_task_ctx.wdrHandle != DRV_HANDLE_INVALID) {
-      winc_task_set_state(WINC_TASK_STATE_REQ_DHCP);
+      if (app_is_cold_boot()) {
+        winc_task_set_state(WINC_TASK_STATE_PRINT_VERSION);
+      } else {
+        winc_task_set_state(WINC_TASK_STATE_REQ_DHCP);
+      }
     } else {
       // remain in this state until Open succeeds.
     }
+  } break;
+
+  case WINC_TASK_STATE_PRINT_VERSION: {
+    tstrM2mRev version_info;
+    if (M2M_SUCCESS != m2m_wifi_get_firmware_version(&version_info)) {
+      YB_LOG_ERROR("Failed to get WINC firmware version");
+    } else {
+      print_winc_version(&version_info);
+    }
+    winc_task_set_state(WINC_TASK_STATE_REQ_DHCP);
   } break;
 
   case WINC_TASK_STATE_REQ_DHCP: {
@@ -249,6 +266,23 @@ static void winc_task_set_state(winc_task_state_t new_state) {
 
 static const char *winc_task_state_name(winc_task_state_t state) {
   return s_winc_task_state_names[state];
+}
+
+static void print_winc_version(tstrM2mRev *version_info) {
+  YB_LOG_INFO("WINC1500 Info:");
+  YB_LOG_INFO("  Chip ID: %ld", version_info->u32Chipid);
+  YB_LOG_INFO("  Firmware Ver: %u.%u.%u SVN Rev %u",
+              version_info->u8FirmwareMajor,
+              version_info->u8FirmwareMinor,
+              version_info->u8FirmwarePatch,
+              version_info->u16FirmwareSvnNum);
+  YB_LOG_INFO("  Firmware Built at %s Time %s",
+              version_info->BuildDate,
+              version_info->BuildTime);
+  YB_LOG_INFO("  Firmware Min Driver Ver: %u.%u.%u",
+              version_info->u8DriverMajor,
+              version_info->u8DriverMinor,
+              version_info->u8DriverPatch);
 }
 
 static void winc_task_dhcp_cb(DRV_HANDLE handle, uint32_t dhcpAddr) {

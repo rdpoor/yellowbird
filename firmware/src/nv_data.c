@@ -44,10 +44,11 @@
 // *****************************************************************************
 // Local (private, static) storage
 
+static nv_data_t *s_nv_data = (nv_data_t *)BKUPRAM_ADDR;
 // *****************************************************************************
 // Public code
 
-nv_data_t *nv_data(void) { return (nv_data_t *)BKUPRAM_ADDR; }
+nv_data_t *nv_data(void) { return s_nv_data; }
 
 void nv_data_clear(void) { memset(nv_data(), 0, sizeof(nv_data_t)); }
 
