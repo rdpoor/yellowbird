@@ -1,5 +1,39 @@
-# Klatu Networks "Yellowbird" Project
+# Klatu Networks Yellowbird v0.1.0
 _rdpoor@gmail.com, Feb 2022_
+
+## Overview
+
+Klatu Networks develops and sells wireless predictive maintenance monitors
+for laboratory-grade refrigerations systems.  Because reliable monitoring
+requires a reliable network, Klatu has developed Yellowbird, a diagnostic
+tool designed to identify any issues with a client's wireless network.  When
+co-located with Klatu's monitoring devices, Yellowbird verifies end-to-end
+communication with remote servers and provides diagnostic information in case
+there are any issues.
+
+This document describes the setup and operation of Yellowbird 0.1.0.
+
+## Prerequisites
+
+Yellowbird 0.1.0 requires the following hardware and software components:
+
+### Hardware
+
+* [SAM E54 Xplained Pro evaluation kit](https://ww1.microchip.com/downloads/en/DeviceDoc/70005321A.pdf)
+* [WINC1500 Xplained Pro extension board](https://ww1.microchip.com/downloads/en/DeviceDoc/50002616A.pdf)
+with optional 3-pin header soldered to the "DEBUG UART" (J103) footprint.
+* [IO1 Xplained Pro extension board](https://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-42078-IO1-Xplained-Pro_User-Guide.pdf)
+* Laptop or PC (Windows, macOS or Linux)
+* microSD card
+* USB A to USB micro cable
+* [FTDI serial to USB cable](https://www.digikey.com/en/products/detail/ftdi-future-technology-devices-international-ltd/TTL-232R-RPI/4382044)
+
+### Software
+
+* MPLAB.X v5.0 or later
+* A terminal emulator for the PC (TeraTerm or puTTY for Windows, Terminal for macOS, etc)
+* WINC1500 v 19.7.6 or later loaded into the WINC1500
+* [The yellowbird firmware] tbd
 
 ## dev notes for v0.1.0
 
