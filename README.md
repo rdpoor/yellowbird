@@ -10,17 +10,9 @@ performance and predictive monitoring for ultra-low refrigeration equipment.
 An key offering in the Klatu product line is "Blackbird", built around the
 Microchip SAME54 microcontroller and the WINC1500 network processor.
 
-At some customer sites, the Blackbird has trouble communicating: it goes offline
-sporadically, and sometimes fails to reconnect altogether.
-
 The key goal of this Yellowbird project is to develop a simple application, also
 based on the SAME54 and WINC1500, that communicates periodically with remoted
-servers in order to identify the root cause behind the communication failures:
-
-* Is there a problem with the firmware in the Blackbird?
-* Is there a problem with version v 19.5.4 WINC1500 firmware used by the
-Blackbird?  (Note that the newest version is v 19.7.7)
-* Is there a problem with the configuration of the customers' WIFI networks?
+servers in order to identify any issues with the customer WLAN.
 
 This document describes the setup and operation of Yellowbird 0.1.0.
 
